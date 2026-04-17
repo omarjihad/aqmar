@@ -3,225 +3,300 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Epic Mini App</title>
+    <title>NFT Battle - TON Edition</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-color: #0d0d0d; /* Onyx Black */
-            --card-bg: #1a1a1a;
-            --accent-color: #ffcc00; /* Gold */
-            --text-color: #ffffff;
-            --secondary-text: #b3b3b3;
+            --bg-main: #121216;
+            --bg-card: #1c1c24;
+            --ton-blue: #0088cc;
+            --neon-purple: #8a2be2;
+            --text-light: #ffffff;
+            --text-muted: #888899;
+            --danger: #ff4444;
+            --success: #00C851;
         }
+
+        * { box-sizing: border-box; }
 
         body {
             font-family: 'Cairo', sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            margin: 0;
-            padding: 0;
+            background-color: var(--bg-main);
+            color: var(--text-light);
+            margin: 0; padding: 0;
             overflow-x: hidden;
             user-select: none;
         }
 
         /* شاشة التحميل */
-        #loading-screen {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: var(--bg-color);
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
+        #loader {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--bg-main);
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            z-index: 9999; transition: opacity 0.5s;
         }
-
-        .loader {
-            width: 80px;
-            height: 80px;
-            border: 5px solid #333;
-            border-top: 5px solid var(--accent-color);
+        .spinner {
+            width: 60px; height: 60px;
+            border: 5px solid rgba(255,255,255,0.1);
+            border-top-color: var(--ton-blue);
             border-radius: 50%;
             animation: spin 1s linear infinite;
         }
+        @keyframes spin { to { transform: rotate(360deg); } }
 
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-
-        /* القائمة العلوية */
+        /* الهيدر العلوي */
         .header {
-            padding: 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: linear-gradient(to bottom, #1a1a1a, transparent);
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 15px 20px;
+            background: rgba(28, 28, 36, 0.8);
+            backdrop-filter: blur(10px);
+            position: sticky; top: 0; z-index: 100;
+        }
+        .balance-box {
+            background: rgba(0, 136, 204, 0.1);
+            border: 1px solid var(--ton-blue);
+            padding: 5px 15px; border-radius: 20px;
+            font-weight: bold; color: var(--ton-blue);
+            display: flex; align-items: center; gap: 5px;
         }
 
-        .stars-balance {
-            background: rgba(255, 204, 0, 0.1);
-            padding: 5px 15px;
-            border-radius: 20px;
-            border: 1px solid var(--accent-color);
-            color: var(--accent-color);
-            font-weight: bold;
+        /* الصفحات */
+        .page { display: none; padding: 20px; padding-bottom: 90px; animation: fadeIn 0.3s; }
+        .page.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* البطاقات والأزرار */
+        .card { background: var(--bg-card); border-radius: 16px; padding: 20px; margin-bottom: 15px; border: 1px solid rgba(255,255,255,0.05); }
+        .btn-primary {
+            background: linear-gradient(45deg, var(--ton-blue), var(--neon-purple));
+            color: white; border: none; padding: 12px 20px; border-radius: 12px;
+            width: 100%; font-weight: bold; font-family: 'Cairo'; font-size: 16px;
+            cursor: pointer; transition: transform 0.1s;
         }
+        .btn-primary:active { transform: scale(0.95); }
 
-        /* الأقسام الرئيسية */
-        .page { display: none; padding: 20px; padding-bottom: 100px; }
-        .active { display: block; animation: fadeIn 0.5s; }
-
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-
-        /* البطاقات */
-        .card {
-            background: var(--card-bg);
-            border-radius: 15px;
-            padding: 20px;
-            margin-bottom: 15px;
-            border: 1px solid #333;
-            text-align: center;
+        /* لعبة الصاروخ (Crash) */
+        .crash-container {
+            height: 250px; background: #0a0a0c; border-radius: 16px;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            position: relative; overflow: hidden; border: 2px solid var(--neon-purple);
         }
+        #multiplier { font-size: 50px; font-weight: 900; z-index: 2; }
+        .rocket-icon { font-size: 40px; position: absolute; bottom: 20px; left: 20px; transition: all 0.1s; z-index: 2; }
+        .stars { position: absolute; width: 100%; height: 100%; background: url('https://www.transparenttextures.com/patterns/stardust.png'); opacity: 0.3; animation: moveBg 10s linear infinite; }
+        @keyframes moveBg { from { background-position: 0 0; } to { background-position: 0 1000px; } }
 
-        /* أزرار التنقل السفلية */
-        .nav-bar {
-            position: fixed;
-            bottom: 0;
-            width: 100%;
-            background: #111;
-            display: flex;
-            justify-content: space-around;
-            padding: 15px 0;
-            border-top: 1px solid #333;
-            z-index: 900;
+        /* شريط التنقل السفلي */
+        .navbar {
+            position: fixed; bottom: 0; width: 100%;
+            background: var(--bg-card); border-top: 1px solid rgba(255,255,255,0.05);
+            display: flex; justify-content: space-around; padding: 15px 0; z-index: 100;
         }
+        .nav-item { color: var(--text-muted); font-size: 12px; text-align: center; cursor: pointer; transition: 0.3s; }
+        .nav-item.active { color: var(--ton-blue); transform: translateY(-3px); font-weight: bold; }
+        .nav-icon { font-size: 22px; display: block; margin-bottom: 3px; }
 
-        .nav-item {
-            color: var(--secondary-text);
-            font-size: 12px;
-            text-align: center;
-            cursor: pointer;
-        }
-
-        .nav-item.active { color: var(--accent-color); }
-
-        .btn-main {
-            background: var(--accent-color);
-            color: #000;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 10px;
-            font-weight: bold;
-            width: 100%;
-            margin-top: 10px;
-        }
-
-        /* الستايلات الخاصة بالبروفايل */
-        .profile-img { width: 80px; height: 80px; border-radius: 50%; border: 3px solid var(--accent-color); }
-        .level-badge { background: #333; padding: 2px 10px; border-radius: 10px; font-size: 14px; }
-        
-        .grid-cases {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-        }
+        /* شبكة الصناديق */
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .case-card { text-align: center; background: linear-gradient(180deg, #2a2a35 0%, var(--bg-card) 100%); padding: 15px; border-radius: 15px; border: 1px solid rgba(255,255,255,0.1); }
+        .case-img { width: 80px; height: 80px; object-fit: contain; margin-bottom: 10px; }
     </style>
 </head>
 <body>
 
-    <div id="loading-screen">
-        <div class="loader"></div>
-        <h2 style="margin-top: 20px;">جاري تحميل EPIC...</h2>
+    <div id="loader">
+        <div class="spinner"></div>
+        <h3 style="margin-top: 20px; color: var(--ton-blue);">جاري الاتصال...</h3>
     </div>
 
     <div class="header">
-        <div id="user-name">لاعب جديد</div>
-        <div class="stars-balance">⭐ <span id="balance">1000</span></div>
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <img src="https://via.placeholder.com/40" id="user-avatar" style="border-radius: 50%; width: 40px;">
+            <div>
+                <div id="user-name" style="font-weight: bold; font-size: 14px;">لاعب جديد</div>
+                <div style="font-size: 11px; color: var(--text-muted);">للوناسة فقط 🎮</div>
+            </div>
+        </div>
+        <div class="balance-box">
+            <span id="balance">10.00</span> 💎
+        </div>
     </div>
 
-    <div id="profile" class="page active">
-        <div class="card">
-            <img src="https://via.placeholder.com/80" class="profile-img" id="user-photo">
-            <h3 id="display-name">User Name</h3>
-            <span class="level-badge">LEVEL 1</span>
-            <div style="margin-top: 15px;">
-                <p style="color: var(--secondary-text);">الجوائز (Rewards)</p>
-                <div id="inventory">لا توجد هدايا حالياً</div>
+    <div id="games" class="page active">
+        <h3 style="margin-top: 0;">الصاروخ 🚀</h3>
+        <div class="crash-container">
+            <div class="stars"></div>
+            <div id="multiplier" style="color: white;">1.00x</div>
+            <div class="rocket-icon" id="rocket">🚀</div>
+        </div>
+        
+        <div class="card" style="margin-top: 15px;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                <span>مبلغ الرهان:</span>
+                <span id="bet-amount">1.00 💎</span>
             </div>
-            <button class="btn-main" onclick="copyInvite()">نسخ رابط الإحالة 🔗</button>
+            <input type="range" id="bet-slider" min="0.1" max="10" step="0.1" value="1" style="width: 100%; margin-bottom: 15px;">
+            <button class="btn-primary" id="btn-bet" onclick="placeBet()">وضع الرهان (Bet)</button>
         </div>
     </div>
 
     <div id="cases" class="page">
-        <h2>الصناديق المحظوظة 🎁</h2>
-        <div class="grid-cases">
-            <div class="card">
-                <p>Pepe Box</p>
-                <p>⭐ 49</p>
-                <button class="btn-main">فتح</button>
+        <h3 style="margin-top: 0;">الصناديق الحصرية 🎁</h3>
+        <div class="grid-2">
+            <div class="case-card">
+                <div style="font-size: 50px;">📦</div>
+                <h4>Starter</h4>
+                <button class="btn-primary" style="padding: 8px;">2.50 💎</button>
             </div>
-            <div class="card">
-                <p>Onyx Box</p>
-                <p>⭐ 250</p>
-                <button class="btn-main">فتح</button>
+            <div class="case-card">
+                <div style="font-size: 50px;">💎</div>
+                <h4>Premium</h4>
+                <button class="btn-primary" style="padding: 8px;">15.00 💎</button>
             </div>
         </div>
     </div>
 
-    <div id="games" class="page">
-        <div class="card" style="background: #000; border: 2px solid #ff4444;">
-            <h2 style="color: #ff4444;">ROCKET 🚀</h2>
-            <div style="font-size: 48px; margin: 20px 0;" id="multiplier">1.00x</div>
-            <button class="btn-main" style="background: #ff4444; color: white;">BET (رهان)</button>
+    <div id="profile" class="page">
+        <div class="card" style="text-align: center;">
+            <img src="https://via.placeholder.com/80" id="profile-avatar" style="border-radius: 50%; width: 80px; border: 3px solid var(--neon-purple);">
+            <h2 id="profile-name" style="margin: 10px 0 5px 0;">اسم اللاعب</h2>
+            <span style="background: rgba(255,255,255,0.1); padding: 3px 10px; border-radius: 10px; font-size: 12px;">المستوى 1</span>
+        </div>
+        <div class="card">
+            <h4>إحصائياتك</h4>
+            <div style="display: flex; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 10px; margin-bottom: 10px;">
+                <span>إجمالي الأرباح:</span> <span style="color: var(--success);">+45.2 💎</span>
+            </div>
+            <button class="btn-primary" style="background: #333;" onclick="alert('رابط الإحالة: https://t.me/YourBot?start=ref123')">نسخ رابط الإحالة 🔗</button>
         </div>
     </div>
 
-    <div class="nav-bar">
-        <div class="nav-item active" onclick="showPage('profile', this)">🏠 بروفايل</div>
-        <div class="nav-item" onclick="showPage('cases', this)">🎁 صناديق</div>
-        <div class="nav-item" onclick="showPage('games', this)">🚀 ألعاب</div>
-        <div class="nav-item" onclick="showPage('pvp', this)">⚔️ PVP</div>
+    <div class="navbar">
+        <div class="nav-item active" onclick="switchTab('games', this)">
+            <span class="nav-icon">🚀</span> ألعاب
+        </div>
+        <div class="nav-item" onclick="switchTab('cases', this)">
+            <span class="nav-icon">🎁</span> صناديق
+        </div>
+        <div class="nav-item" onclick="switchTab('profile', this)">
+            <span class="nav-icon">👤</span> بروفايل
+        </div>
     </div>
 
     <script>
-        // إخفاء شاشة التحميل بعد 3 ثواني
-        setTimeout(() => {
-            document.getElementById('loading-screen').style.display = 'none';
-        }, 3000);
+        // إخفاء شاشة التحميل والتكامل مع تليجرام
+        let tg = window.Telegram.WebApp;
+        tg.expand();
+        
+        window.onload = () => {
+            setTimeout(() => { document.getElementById('loader').style.opacity = '0'; setTimeout(() => document.getElementById('loader').style.display = 'none', 500); }, 1500);
+            
+            if(tg.initDataUnsafe.user) {
+                let user = tg.initDataUnsafe.user;
+                document.getElementById('user-name').innerText = user.first_name;
+                document.getElementById('profile-name').innerText = user.first_name;
+                if(user.photo_url) {
+                    document.getElementById('user-avatar').src = user.photo_url;
+                    document.getElementById('profile-avatar').src = user.photo_url;
+                }
+            }
+        };
 
         // التنقل بين الصفحات
-        function showPage(pageId, element) {
+        function switchTab(tabId, element) {
             document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-            document.getElementById(pageId).classList.add('active');
-            
             document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
             element.classList.add('active');
         }
 
-        // جلب بيانات تليجرام
-        const tg = window.Telegram.WebApp;
-        tg.expand();
-        if (tg.initDataUnsafe.user) {
-            document.getElementById('display-name').innerText = tg.initDataUnsafe.user.first_name;
-            document.getElementById('user-name').innerText = tg.initDataUnsafe.user.first_name;
-            if (tg.initDataUnsafe.user.photo_url) {
-                document.getElementById('user-photo').src = tg.initDataUnsafe.user.photo_url;
-            }
-        }
+        // تحديث شريط الرهان
+        const betSlider = document.getElementById('bet-slider');
+        const betAmountDisplay = document.getElementById('bet-amount');
+        betSlider.oninput = function() { betAmountDisplay.innerText = this.value + " 💎"; }
 
-        function copyInvite() {
-            // منطق نسخ الرابط
-            alert("تم نسخ رابط الإحالة! تحصل على 80 نجمة لكل صديق.");
-        }
-
-        // تجربة أنيميشن الصاروخ (بسيط جداً للعرض)
+        // منطق لعبة الصاروخ (Crash Logic)
+        let balance = 10.00;
+        let isPlaying = false;
         let multi = 1.00;
-        setInterval(() => {
-            if (document.getElementById('games').classList.contains('active')) {
+        let crashPoint = 0;
+        let gameInterval;
+
+        function updateBalance(amount) {
+            balance += amount;
+            document.getElementById('balance').innerText = balance.toFixed(2);
+        }
+
+        function placeBet() {
+            if(isPlaying) return;
+            let bet = parseFloat(betSlider.value);
+            if(bet > balance) { tg.showAlert("رصيدك غير كافٍ!"); return; }
+
+            // بدء اللعبة
+            isPlaying = true;
+            updateBalance(-bet); // خصم الرهان
+            document.getElementById('btn-bet').innerText = "سحب الأرباح (Cashout)";
+            document.getElementById('btn-bet').style.background = "var(--success)";
+            document.getElementById('multiplier').style.color = "white";
+            
+            multi = 1.00;
+            crashPoint = (Math.random() * 3 + 1).toFixed(2); // يطك برقم عشوائي بين 1 و 4
+            
+            let rocket = document.getElementById('rocket');
+            rocket.style.bottom = "20px"; rocket.style.left = "20px";
+
+            // زر السحب
+            document.getElementById('btn-bet').onclick = function() { cashout(bet); };
+
+            gameInterval = setInterval(() => {
                 multi += 0.01;
                 document.getElementById('multiplier').innerText = multi.toFixed(2) + "x";
-                if (Math.random() < 0.01) multi = 1.00; // انفجار وهمي
-            }
-        }, 100);
+                
+                // حركة الصاروخ
+                rocket.style.bottom = (20 + (multi * 15)) + "px";
+                rocket.style.left = (20 + (multi * 10)) + "px";
+
+                if(multi >= crashPoint) {
+                    crash();
+                }
+            }, 50);
+        }
+
+        function cashout(betAmount) {
+            if(!isPlaying) return;
+            clearInterval(gameInterval);
+            let winAmount = betAmount * multi;
+            updateBalance(winAmount);
+            document.getElementById('multiplier').style.color = "var(--success)";
+            resetGame("تم السحب: +" + winAmount.toFixed(2) + " 💎");
+        }
+
+        function crash() {
+            clearInterval(gameInterval);
+            document.getElementById('multiplier').style.color = "var(--danger)";
+            document.getElementById('rocket').innerText = "💥";
+            resetGame("طار الصاروخ!");
+        }
+
+        function resetGame(msg) {
+            isPlaying = false;
+            let btn = document.getElementById('btn-bet');
+            btn.innerText = msg + " - العب مجدداً";
+            btn.style.background = "linear-gradient(45deg, var(--ton-blue), var(--neon-purple))";
+            
+            setTimeout(() => {
+                if(!isPlaying) {
+                    btn.innerText = "وضع الرهان (Bet)";
+                    document.getElementById('rocket').innerText = "🚀";
+                    document.getElementById('multiplier').innerText = "1.00x";
+                    document.getElementById('multiplier').style.color = "white";
+                }
+            }, 2000);
+            
+            // إعادة الزر لوظيفته الأصلية
+            btn.onclick = placeBet;
+        }
     </script>
 </body>
 </html>
