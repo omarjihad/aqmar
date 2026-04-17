@@ -3,86 +3,111 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>NFT Battle Clone</title>
+    <title>NFT Battle - Ultimate Edition</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@600;800;900&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-main: #101014;
-            --bg-card: #18181f;
-            --ton-blue: #0088cc;
+            --bg-main: #0c0c10;
+            --bg-card: #16161e;
+            --ton-blue: #0098ea;
             --text-main: #ffffff;
             --text-muted: #8e8e93;
             --accent-purple: #8a2be2;
-            --btn-deposit: #4a4a5a;
+            --btn-deposit: #2a2a35;
+            --glass-bg: rgba(22, 22, 30, 0.7);
         }
 
-        * { box-sizing: border-box; font-family: 'Cairo', sans-serif; margin: 0; padding: 0; user-select: none; }
-        body { background-color: var(--bg-main); color: var(--text-main); overflow-x: hidden; padding-bottom: 80px; }
+        * { box-sizing: border-box; font-family: 'Cairo', sans-serif; margin: 0; padding: 0; user-select: none; -webkit-tap-highlight-color: transparent; }
+        body { background-color: var(--bg-main); color: var(--text-main); overflow-x: hidden; }
 
-        /* الهيدر العلوي مثل الفيديو */
+        /* تأثير الغبش (Glassmorphism) للهيدر والناف بار */
         .header {
             display: flex; justify-content: space-between; align-items: center;
-            padding: 15px 20px; background: #15151a; position: sticky; top: 0; z-index: 100;
+            padding: 15px 20px; background: var(--glass-bg);
+            backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
+            position: fixed; top: 0; width: 100%; z-index: 100;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
         }
         .user-info { display: flex; align-items: center; gap: 10px; }
-        .avatar { width: 35px; height: 35px; border-radius: 50%; background: #333; border: 2px solid #444; }
+        .avatar { width: 40px; height: 40px; border-radius: 12px; background: #333; border: 2px solid var(--accent-purple); box-shadow: 0 0 10px rgba(138, 43, 226, 0.3); }
         .balance-container { text-align: center; }
-        .balance-title { font-size: 10px; color: var(--text-muted); }
-        .balance-amount { font-size: 16px; font-weight: 900; color: #00e6ff; display: flex; align-items: center; gap: 5px; justify-content: center; }
-        .btn-deposit { background: var(--btn-deposit); color: white; border: none; padding: 8px 15px; border-radius: 10px; font-weight: bold; font-size: 12px; }
+        .balance-title { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; }
+        .balance-amount { font-size: 18px; font-weight: 900; color: #00e6ff; text-shadow: 0 0 10px rgba(0, 230, 255, 0.4); }
+        .btn-deposit { background: var(--btn-deposit); color: white; border: 1px solid rgba(255,255,255,0.1); padding: 8px 15px; border-radius: 12px; font-weight: 800; cursor: pointer; transition: 0.2s; }
+        .btn-deposit:active { transform: scale(0.9); background: var(--ton-blue); border-color: var(--ton-blue); }
 
-        /* شريط الصناديق الملونة العلوية (Live Drops) */
-        .live-drops {
-            display: flex; gap: 10px; padding: 15px 20px; overflow-x: auto;
+        /* الحاوية الرئيسية (تترك مسافة للهيدر والناف بار) */
+        .main-container { padding: 90px 20px 100px 20px; }
+
+        /* نظام الصفحات */
+        .page { display: none; animation: fadeIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .page.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(15px) scale(0.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
+
+        /* Live Drops (المربعات الملونة الفوك) */
+        .live-drops { display: flex; gap: 12px; margin-bottom: 25px; overflow-x: auto; padding-bottom: 5px; }
+        .live-drops::-webkit-scrollbar { display: none; }
+        .drop-box { 
+            min-width: 50px; height: 50px; border-radius: 14px; flex-shrink: 0;
+            display: flex; justify-content: center; align-items: center; font-size: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3); transition: 0.3s; border: 1px solid rgba(255,255,255,0.2);
         }
-        .drop-box { min-width: 45px; height: 45px; border-radius: 10px; background: linear-gradient(45deg, #ff416c, #ff4b2b); flex-shrink: 0; }
-        .drop-box:nth-child(2) { background: linear-gradient(45deg, #8E2DE2, #4A00E0); }
-        .drop-box:nth-child(3) { background: linear-gradient(45deg, #00b09b, #96c93d); }
-        .drop-box:nth-child(4) { background: linear-gradient(45deg, #f7b733, #fc4a1a); }
-
-        /* الحاوية الرئيسية */
-        .container { padding: 0 20px; }
+        .drop-box:hover { transform: translateY(-3px); }
+        .bg-1 { background: linear-gradient(135deg, #ff416c, #ff4b2b); }
+        .bg-2 { background: linear-gradient(135deg, #8E2DE2, #4A00E0); }
+        .bg-3 { background: linear-gradient(135deg, #00b09b, #96c93d); }
+        .bg-4 { background: linear-gradient(135deg, #f7b733, #fc4a1a); }
+        .bg-5 { background: linear-gradient(135deg, #00d2ff, #3a7bd5); }
 
         /* البانرات الرئيسية (الصاروخ و PVP) */
         .banner {
-            background: linear-gradient(135deg, #1f1f2e, #18181f);
-            border-radius: 16px; padding: 20px; margin-bottom: 15px;
-            position: relative; overflow: hidden; border: 1px solid rgba(255,255,255,0.05);
+            background: linear-gradient(135deg, #1f1f2e, #16161e);
+            border-radius: 20px; padding: 25px 20px; margin-bottom: 18px;
+            position: relative; overflow: hidden; border: 1px solid rgba(255,255,255,0.08);
             display: flex; justify-content: space-between; align-items: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5); cursor: pointer; transition: 0.2s;
         }
-        .banner-title { font-size: 24px; font-weight: 900; font-style: italic; display: flex; align-items: center; gap: 10px; }
-        .badge-hot { background: white; color: black; font-size: 10px; padding: 2px 6px; border-radius: 5px; font-weight: 900; margin-bottom: 5px; display: inline-block; }
-        .badge-new { background: #ffaa00; color: black; font-size: 10px; padding: 2px 6px; border-radius: 5px; font-weight: 900; margin-bottom: 5px; display: inline-block; }
-        .rocket-img { font-size: 50px; transform: rotate(45deg); }
+        .banner:active { transform: scale(0.97); }
+        .banner::after { content: ''; position: absolute; top: 0; right: 0; width: 100px; height: 100%; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.05)); transform: skewX(-45deg); }
+        
+        .banner-title { font-size: 28px; font-weight: 900; font-style: italic; letter-spacing: 1px; }
+        .badge { color: black; font-size: 11px; padding: 3px 8px; border-radius: 6px; font-weight: 900; margin-bottom: 5px; display: inline-block; animation: pulse 2s infinite; }
+        .badge-hot { background: #ffffff; box-shadow: 0 0 10px rgba(255,255,255,0.5); }
+        .badge-new { background: #ffaa00; box-shadow: 0 0 10px rgba(255, 170, 0, 0.5); }
+        
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
+        .rocket-img { font-size: 55px; transform: rotate(45deg); filter: drop-shadow(0 0 15px rgba(255,0,0,0.3)); }
 
-        /* أزرار نصفية (Contracts / Upgrade) */
-        .half-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
+        /* أزرار نصفية */
+        .half-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 25px; }
         .half-btn {
-            background: #4a148c; border-radius: 12px; padding: 15px; font-weight: bold;
+            border-radius: 16px; padding: 18px 15px; font-weight: 900;
             display: flex; justify-content: space-between; align-items: center; color: white;
-            background: linear-gradient(90deg, #3a0ca3, #4361ee);
+            cursor: pointer; transition: 0.2s; box-shadow: 0 5px 15px rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1);
         }
-        .half-btn.green { background: linear-gradient(90deg, #00b4d8, #0077b6); }
-
-        /* شبكة الصناديق المجانية وغيرها */
-        .boxes-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
-        .box-card {
-            background: var(--bg-card); border-radius: 16px; padding: 15px; text-align: center;
-            border: 1px solid rgba(255,255,255,0.05); position: relative;
-        }
-        .box-title { font-size: 20px; font-weight: 900; margin-bottom: 10px; }
-        .box-img { font-size: 50px; margin-bottom: 10px; display: block; }
-        .box-btn { background: rgba(255,255,255,0.1); color: white; border: none; padding: 5px 10px; border-radius: 8px; font-size: 12px; width: 100%; }
+        .half-btn:active { transform: scale(0.95); }
+        .btn-purple { background: linear-gradient(135deg, #4A00E0, #8E2DE2); }
+        .btn-green { background: linear-gradient(135deg, #11998e, #38ef7d); }
 
         /* شريط التنقل السفلي */
         .navbar {
-            position: fixed; bottom: 0; width: 100%; background: #15151a; border-top: 1px solid #222;
-            display: flex; justify-content: space-around; padding: 15px 0; z-index: 100;
+            position: fixed; bottom: 0; width: 100%; 
+            background: var(--glass-bg); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            border-top: 1px solid rgba(255,255,255,0.05);
+            display: flex; justify-content: space-around; padding: 15px 0 25px 0; z-index: 100;
         }
-        .nav-item { color: var(--text-muted); font-size: 12px; text-align: center; opacity: 0.5; }
-        .nav-item.active { color: white; opacity: 1; }
-        .nav-icon { font-size: 20px; display: block; margin-bottom: 2px; }
+        .nav-item { 
+            color: var(--text-muted); font-size: 13px; font-weight: 800; text-align: center; 
+            opacity: 0.6; cursor: pointer; transition: 0.3s; position: relative;
+        }
+        .nav-item.active { color: white; opacity: 1; transform: translateY(-4px); }
+        .nav-item.active::after {
+            content: ''; position: absolute; bottom: -10px; left: 50%; transform: translateX(-50%);
+            width: 5px; height: 5px; background: var(--ton-blue); border-radius: 50%; box-shadow: 0 0 8px var(--ton-blue);
+        }
+        .nav-icon { font-size: 24px; display: block; margin-bottom: 4px; transition: 0.3s; }
+        .nav-item.active .nav-icon { filter: drop-shadow(0 0 10px rgba(255,255,255,0.5)); }
 
     </style>
 </head>
@@ -90,72 +115,132 @@
 
     <div class="header">
         <div class="user-info">
-            <div class="avatar"></div>
+            <div class="avatar" id="user-img"></div>
         </div>
         <div class="balance-container">
             <div class="balance-title">Your balance</div>
-            <div class="balance-amount"><span style="font-size:12px;">💎</span> 0.194</div>
+            <div class="balance-amount">💎 0.194</div>
         </div>
         <button class="btn-deposit">Deposit</button>
     </div>
 
-    <div class="live-drops">
-        <div class="drop-box"></div>
-        <div class="drop-box"></div>
-        <div class="drop-box"></div>
-        <div class="drop-box"></div>
-        <div class="drop-box"></div>
-    </div>
-
-    <div class="container">
-        <div class="banner">
-            <div>
-                <span class="badge-hot">⚡ HOT!</span>
-                <div class="banner-title">🚀 ROCKET</div>
+    <div class="main-container">
+        
+        <div id="page-live" class="page active">
+            <div class="live-drops">
+                <div class="drop-box bg-1">🍄</div>
+                <div class="drop-box bg-2">🎂</div>
+                <div class="drop-box bg-3">🧚‍♀️</div>
+                <div class="drop-box bg-4">👠</div>
+                <div class="drop-box bg-5">👑</div>
             </div>
-            <div class="rocket-img">🚀</div>
+
+            <div class="banner">
+                <div>
+                    <span class="badge badge-hot">⚡ HOT!</span>
+                    <div class="banner-title">ROCKET</div>
+                </div>
+                <div class="rocket-img">🚀</div>
+            </div>
+
+            <div class="banner">
+                <div>
+                    <span class="badge badge-new">✨ NEW!</span>
+                    <div class="banner-title" style="color: #ffcc00;">PVP BATTLE</div>
+                </div>
+                <div style="font-size: 40px; filter: drop-shadow(0 0 10px #ffcc00);">⚔️</div>
+            </div>
+
+            <div class="half-grid">
+                <div class="half-btn btn-purple">
+                    <span>📄 CONTRACTS</span> <span style="font-size: 20px;">›</span>
+                </div>
+                <div class="half-btn btn-green">
+                    <span>⬆️ UPGRADE</span> <span style="font-size: 20px;">›</span>
+                </div>
+            </div>
         </div>
 
-        <div class="banner">
-            <div>
-                <span class="badge-new">✨ NEW!</span>
-                <div class="banner-title">⚔️ PVP</div>
-            </div>
-            <div style="display:flex; gap: 5px;">
-                <div class="avatar" style="width:25px;height:25px; border-color:#ffcc00;"></div>
-                <div class="avatar" style="width:25px;height:25px; border-color:#00ff00;"></div>
-            </div>
-        </div>
-
-        <div class="half-grid">
-            <div class="half-btn">
-                <span>📄 CONTRACTS</span> <span>></span>
-            </div>
-            <div class="half-btn green">
-                <span>⬆️ UPGRADE</span> <span>></span>
+        <div id="page-cases" class="page">
+            <h2 style="margin-bottom: 15px; font-style: italic;">PREMIUM CASES</h2>
+            <div class="half-grid">
+                <div class="banner" style="flex-direction: column; text-align: center; padding: 20px;">
+                    <div style="font-size: 60px; margin-bottom: 10px;">📦</div>
+                    <h3 style="margin-bottom: 10px;">Starter</h3>
+                    <button class="btn-deposit" style="width: 100%; background: var(--ton-blue); border: none;">20 💎</button>
+                </div>
+                <div class="banner" style="flex-direction: column; text-align: center; padding: 20px;">
+                    <div style="font-size: 60px; margin-bottom: 10px;">🎒</div>
+                    <h3 style="margin-bottom: 10px;">Premium</h3>
+                    <button class="btn-deposit" style="width: 100%; background: var(--ton-blue); border: none;">50 💎</button>
+                </div>
             </div>
         </div>
 
-        <div class="boxes-grid">
-            <div class="box-card">
-                <div class="box-title" style="color: #ffcc00;">FREE24</div>
-                <span class="box-img">💍</span>
-                <button class="box-btn" style="color:#ffcc00; border: 1px solid #ffcc00;">Free 24h</button>
-            </div>
-            <div class="box-card">
-                <div class="box-title" style="color: #00ffcc;">FREE</div>
-                <span class="box-img">🍬</span>
-                <button class="box-btn">🎁 FREE</button>
+        <div id="page-profile" class="page">
+            <div class="banner" style="flex-direction: column; align-items: center; text-align: center;">
+                <div class="avatar" style="width: 80px; height: 80px; margin-bottom: 15px; background: #222;"></div>
+                <h2 id="user-name" style="margin-bottom: 5px;">لاعب مجهول</h2>
+                <div style="color: var(--text-muted); font-size: 14px; margin-bottom: 15px;">المستوى: 1</div>
+                <button class="btn-deposit" style="width: 100%; background: linear-gradient(90deg, #8E2DE2, #4A00E0); border: none;">نسخ رابط الإحالة 🔗</button>
             </div>
         </div>
+
     </div>
 
     <div class="navbar">
-        <div class="nav-item active"><span class="nav-icon">🎮</span> Live</div>
-        <div class="nav-item"><span class="nav-icon">📦</span> Cases</div>
-        <div class="nav-item"><span class="nav-icon">🏆</span> Top</div>
-        <div class="nav-item"><span class="nav-icon">👤</span> Profile</div>
+        <div class="nav-item active" onclick="switchPage('page-live', this)">
+            <span class="nav-icon">🎮</span> Live
+        </div>
+        <div class="nav-item" onclick="switchPage('page-cases', this)">
+            <span class="nav-icon">📦</span> Cases
+        </div>
+        <div class="nav-item" onclick="switchPage('page-profile', this)">
+            <span class="nav-icon">👤</span> Profile
+        </div>
     </div>
 
+    <script>
+        // دالة التبديل بين الصفحات (Tabs Logic)
+        function switchPage(pageId, element) {
+            // إخفاء كل الصفحات
+            document.querySelectorAll('.page').forEach(page => {
+                page.classList.remove('active');
+            });
+            // إزالة التفعيل من كل الأزرار
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            
+            // إظهار الصفحة المطلوبة وتفعيل الزر
+            document.getElementById(pageId).classList.add('active');
+            element.classList.add('active');
+            
+            // اهتزاز خفيف للهاتف عند الضغط (إذا كان مدعوماً)
+            if (window.Telegram && window.Telegram.WebApp.HapticFeedback) {
+                window.Telegram.WebApp.HapticFeedback.impactOccurred('light');
+            }
+        }
+
+        // جلب بيانات المستخدم من التليجرام
+        const tg = window.Telegram.WebApp;
+        tg.expand(); // تكبير الشاشة بالكامل
+        
+        if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
+            const user = tg.initDataUnsafe.user;
+            document.getElementById('user-name').innerText = user.first_name;
+            
+            if (user.photo_url) {
+                const avatarUrl = `url('${user.photo_url}')`;
+                document.getElementById('user-img').style.backgroundImage = avatarUrl;
+                document.getElementById('user-img').style.backgroundSize = 'cover';
+                
+                // تحديث صورة البروفايل بالصفحة الثالثة
+                const profileAvatar = document.querySelector('#page-profile .avatar');
+                profileAvatar.style.backgroundImage = avatarUrl;
+                profileAvatar.style.backgroundSize = 'cover';
+            }
+        }
+    </script>
 </body>
 </html>
