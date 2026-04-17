@@ -3,310 +3,252 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>NFT Battle - Legend Edition</title>
+    <title>NFT Battle - Exact Clone</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@600;800;900&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-main: #0c0c10; --bg-card: #16161e; --ton-blue: #0098ea; 
-            --text-main: #ffffff; --text-muted: #8e8e93; --glass-bg: rgba(22, 22, 30, 0.85);
-            --gold: #ffd700;
+            --bg-main: #13131a;
+            --bg-card: #1c1c24;
+            --ton-blue: #0098ea;
+            --text-main: #ffffff;
+            --text-muted: #8e8e93;
+            --accent-purple: #7b2cbf;
         }
 
         * { box-sizing: border-box; font-family: 'Cairo', sans-serif; margin: 0; padding: 0; user-select: none; }
         body { background-color: var(--bg-main); color: var(--text-main); overflow-x: hidden; }
 
-        /* الهيدر وشريط الجوائز (Live Drops) */
-        .top-bar {
-            position: fixed; top: 0; width: 100%; z-index: 100;
-            background: var(--glass-bg); backdrop-filter: blur(15px); border-bottom: 1px solid rgba(255,255,255,0.05);
+        /* الهيدر العلوي */
+        .header {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 15px 20px; background: rgba(19, 19, 26, 0.9);
+            backdrop-filter: blur(10px); position: fixed; top: 0; width: 100%; z-index: 100;
         }
-        .header { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; }
         .user-info { display: flex; align-items: center; gap: 10px; }
-        .avatar { width: 40px; height: 40px; border-radius: 12px; background: #333; border: 2px solid var(--ton-blue); }
-        .balance-amount { font-size: 18px; font-weight: 900; color: #00e6ff; text-shadow: 0 0 10px rgba(0, 230, 255, 0.4); }
-        
-        /* شريط الجوائز المتحرك الفعلي */
-        .live-drops-container { display: flex; overflow: hidden; padding: 10px; background: rgba(0,0,0,0.5); white-space: nowrap; }
-        .live-drops-track { display: flex; gap: 15px; animation: scrollLeft 20s linear infinite; }
-        @keyframes scrollLeft { 0% { transform: translateX(0); } 100% { transform: translateX(100%); } }
-        
-        .drop-item {
-            display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.05);
-            padding: 5px 12px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.1);
-        }
-        .drop-img { width: 20px; height: 20px; object-fit: contain; }
+        .avatar { width: 35px; height: 35px; border-radius: 50%; background: #333; }
+        .balance-container { display: flex; align-items: center; gap: 5px; font-weight: 900; font-size: 16px; color: #00e6ff; }
+        .btn-deposit { background: #4a4a5a; color: white; border: none; padding: 8px 15px; border-radius: 10px; font-weight: bold; font-size: 12px; }
 
-        /* الحاوية الرئيسية */
-        .main-container { padding: 130px 20px 100px 20px; }
+        .main-container { padding: 80px 15px 90px 15px; }
 
-        /* نظام الصفحات */
-        .page { display: none; animation: fadeIn 0.3s ease-out; }
+        /* الأقسام (Pages) */
+        .page { display: none; animation: fadeIn 0.3s ease; }
         .page.active { display: block; }
-        @keyframes fadeIn { from { opacity: 0; transform: scale(0.98); } to { opacity: 1; transform: scale(1); } }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-        /* الصناديق المجانية والخاصة */
-        .special-cases { display: flex; gap: 15px; margin-bottom: 25px; }
-        .special-card {
-            flex: 1; background: linear-gradient(135deg, #2c1a4d, #16161e); border-radius: 16px; 
-            padding: 15px; text-align: center; border: 1px solid var(--ton-blue); box-shadow: 0 0 15px rgba(0, 152, 234, 0.2);
-            cursor: pointer;
+        /* --- تصميم صفحة الصناديق (Live/Cases) --- */
+        /* شريط الجوائز العلوي */
+        .drops-bar { display: flex; gap: 10px; overflow-x: auto; margin-bottom: 20px; padding-bottom: 5px; }
+        .drops-bar::-webkit-scrollbar { display: none; }
+        .drop-box { min-width: 50px; height: 50px; border-radius: 12px; background: #2a2a35; display: flex; justify-content: center; align-items: center; font-size: 24px; }
+        .drop-box.gold { background: linear-gradient(135deg, #ffd700, #ff8c00); }
+        .drop-box.purple { background: linear-gradient(135deg, #8a2be2, #4a00e0); }
+        .drop-box.blue { background: linear-gradient(135deg, #00d2ff, #3a7bd5); }
+
+        /* البانرات الكبيرة (Rocket / PVP) */
+        .banner-large {
+            background: linear-gradient(135deg, #1f1f2e, #16161e); border-radius: 16px; padding: 20px;
+            margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center;
+            border: 1px solid rgba(255,255,255,0.05); position: relative; overflow: hidden;
         }
+        .banner-large::before { content: ''; position: absolute; right: -20px; top: -20px; width: 100px; height: 100px; background: rgba(255,255,255,0.05); border-radius: 50%; }
+        .banner-title { font-size: 24px; font-weight: 900; font-style: italic; display: flex; align-items: center; gap: 5px; }
+        .badge { font-size: 10px; padding: 2px 6px; border-radius: 4px; font-weight: bold; margin-bottom: 5px; display: inline-block; }
+        .badge-hot { background: white; color: black; }
+        .badge-new { background: #ffaa00; color: black; }
+
+        /* الأزرار النصفية (Contracts / Upgrade) */
+        .half-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+        .half-btn { background: #3a0ca3; border-radius: 12px; padding: 15px; display: flex; justify-content: space-between; font-weight: bold; color: white; border: 1px solid rgba(255,255,255,0.1); }
+        .half-btn.green { background: #11998e; }
+
+        /* الصناديق المجانية */
+        .free-cases { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+        .free-card { background: var(--bg-card); border-radius: 16px; padding: 15px; text-align: center; border: 1px solid rgba(255,255,255,0.05); }
+        .free-card img { width: 60px; height: 60px; object-fit: contain; margin-bottom: 10px; }
+        .free-btn { background: rgba(255,255,255,0.1); border: 1px solid #ffd700; color: #ffd700; padding: 5px 10px; border-radius: 8px; font-size: 12px; width: 100%; }
+
+        /* شبكة الصناديق (Cases Grid) */
+        .cases-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+        .case-item { background: var(--bg-card); border-radius: 16px; padding: 15px 10px; text-align: center; position: relative; border: 1px solid rgba(255,255,255,0.05); display: flex; flex-direction: column; align-items: center; justify-content: space-between; }
+        .case-item img { width: 70px; height: 70px; object-fit: contain; margin-bottom: 10px; filter: drop-shadow(0 5px 5px rgba(0,0,0,0.5)); }
+        .case-name { font-size: 14px; font-weight: bold; margin-bottom: 5px; color: var(--text-main); }
+        .case-price { background: rgba(0, 152, 234, 0.15); color: var(--ton-blue); padding: 4px 10px; border-radius: 6px; font-weight: 900; font-size: 13px; }
+
+        /* --- تصميم لعبة الصاروخ (Rocket) --- */
+        .rocket-page-bg { background: #0a0a0f; height: 100vh; display: flex; flex-direction: column; }
+        .rocket-game-area { flex: 1; position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; background-image: radial-gradient(circle at center, #1a1a2e 0%, #0a0a0f 100%); overflow: hidden; }
+        .stars-bg { position: absolute; width: 100%; height: 100%; background: url('https://www.transparenttextures.com/patterns/stardust.png'); opacity: 0.2; }
+        .multiplier-text { font-size: 60px; font-weight: 900; z-index: 2; text-shadow: 0 0 20px rgba(255,255,255,0.2); }
         
-        /* شبكة الصناديق (Cases) */
-        .cases-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-        .case-card {
-            background: var(--bg-card); border-radius: 16px; padding: 20px 10px; text-align: center;
-            border: 1px solid rgba(255,255,255,0.05); position: relative; cursor: pointer; transition: 0.2s;
-        }
-        .case-card:active { transform: scale(0.95); }
-        .case-img { width: 80px; height: 80px; margin: 0 auto 10px auto; display: block; object-fit: contain; filter: drop-shadow(0 10px 10px rgba(0,0,0,0.5)); }
-        .case-price { background: rgba(0, 152, 234, 0.1); color: var(--ton-blue); padding: 5px 10px; border-radius: 8px; font-weight: 900; }
+        .rocket-controls { padding: 20px; background: var(--bg-card); border-top-left-radius: 20px; border-top-right-radius: 20px; z-index: 10; }
+        .bet-history { display: flex; gap: 10px; overflow-x: auto; margin-bottom: 15px; padding-bottom: 5px; }
+        .bet-history::-webkit-scrollbar { display: none; }
+        .history-item { background: rgba(255,255,255,0.1); padding: 5px 10px; border-radius: 8px; font-size: 12px; font-weight: bold; white-space: nowrap; }
+        .history-item.green { color: #00C851; background: rgba(0, 200, 81, 0.1); }
+        .history-item.red { color: #ff4444; background: rgba(255, 68, 68, 0.1); }
 
-        /* مودال (نافذة منبثقة) للفتح المتعدد */
-        .modal-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.8); backdrop-filter: blur(5px); z-index: 200;
-            display: none; justify-content: center; align-items: center;
-        }
-        .modal-content {
-            background: var(--bg-card); width: 90%; border-radius: 20px; padding: 25px; text-align: center;
-            border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 20px 50px rgba(0,0,0,0.5);
-        }
-        .multi-open-btns { display: flex; justify-content: center; gap: 10px; margin: 20px 0; }
-        .multi-btn {
-            background: rgba(255,255,255,0.05); color: white; border: 1px solid rgba(255,255,255,0.2);
-            padding: 10px 15px; border-radius: 10px; font-weight: bold; cursor: pointer;
-        }
-        .multi-btn.active { background: var(--ton-blue); border-color: var(--ton-blue); }
-        .open-btn { background: linear-gradient(90deg, #00b4d8, #0077b6); color: white; border: none; padding: 15px; width: 100%; border-radius: 12px; font-size: 18px; font-weight: 900; margin-top: 10px; }
+        .bet-input-group { display: flex; background: #2a2a35; border-radius: 12px; padding: 5px; margin-bottom: 15px; }
+        .bet-input-group input { flex: 1; background: transparent; border: none; color: white; text-align: center; font-size: 18px; font-weight: bold; outline: none; }
+        .bet-input-group button { background: transparent; border: none; color: var(--text-muted); font-size: 18px; padding: 0 15px; }
 
-        /* لعبة الصاروخ واختيار السكنات */
-        .rocket-container { background: #0a0a0c; height: 200px; border-radius: 20px; border: 2px solid #333; position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center; margin-bottom: 20px;}
-        .rocket-skin-selector { display: flex; justify-content: center; gap: 15px; margin-bottom: 20px; }
-        .skin-btn { width: 50px; height: 50px; background: var(--bg-card); border-radius: 10px; padding: 5px; border: 2px solid transparent; opacity: 0.5; transition: 0.2s;}
-        .skin-btn.active { border-color: var(--ton-blue); opacity: 1; transform: scale(1.1); }
-        .skin-btn img { width: 100%; height: 100%; object-fit: contain; }
+        .btn-bet-large { background: linear-gradient(90deg, #6a11cb, #2575fc); color: white; border: none; width: 100%; padding: 18px; border-radius: 12px; font-size: 20px; font-weight: 900; font-family: 'Cairo'; cursor: pointer; }
 
         /* شريط التنقل السفلي */
         .navbar {
-            position: fixed; bottom: 0; width: 100%; background: var(--glass-bg);
-            border-top: 1px solid rgba(255,255,255,0.05); display: flex; justify-content: space-around; padding: 15px 0 20px 0; z-index: 100;
+            position: fixed; bottom: 0; width: 100%; background: var(--bg-card);
+            border-top: 1px solid rgba(255,255,255,0.05); display: flex; justify-content: space-around; padding: 10px 0 20px 0; z-index: 100;
         }
-        .nav-item { color: var(--text-muted); font-size: 13px; font-weight: 800; text-align: center; opacity: 0.5; transition: 0.3s; }
-        .nav-item.active { color: white; opacity: 1; transform: translateY(-4px); }
-        .nav-icon { font-size: 24px; display: block; margin-bottom: 4px; }
+        .nav-item { color: var(--text-muted); font-size: 11px; font-weight: bold; text-align: center; cursor: pointer; }
+        .nav-item.active { color: white; }
+        .nav-icon { font-size: 22px; display: block; margin-bottom: 2px; }
+
     </style>
 </head>
 <body>
 
-    <div class="top-bar">
-        <div class="header">
-            <div class="user-info">
-                <div class="avatar" id="user-img"></div>
-                <div>
-                    <div style="font-size: 14px; font-weight: bold;" id="user-name">لاعب جديد</div>
-                </div>
-            </div>
-            <div class="balance-amount">💎 <span id="balance">150.00</span></div>
+    <div class="header">
+        <div class="user-info">
+            <div class="avatar" id="user-img"></div>
+            <div style="font-size: 12px; color: var(--text-muted);">Your balance</div>
         </div>
-        
-        <div class="live-drops-container">
-            <div class="live-drops-track" id="drops-track">
-                </div>
-        </div>
-    </div>
-
-    <div class="modal-overlay" id="modal">
-        <div class="modal-content">
-            <h2 id="modal-title">فتح الصندوق</h2>
-            <img src="" id="modal-img" class="case-img" style="width: 120px; height: 120px; margin-top: 15px;">
-            
-            <div id="multi-open-section">
-                <p style="color: var(--text-muted); margin-top: 10px;">اختر عدد الصناديق:</p>
-                <div class="multi-open-btns">
-                    <div class="multi-btn active" onclick="selectAmount(1, this)">x1</div>
-                    <div class="multi-btn" onclick="selectAmount(3, this)">x3</div>
-                    <div class="multi-btn" onclick="selectAmount(5, this)">x5</div>
-                    <div class="multi-btn" onclick="selectAmount(10, this)">x10</div>
-                </div>
-                <button class="open-btn" onclick="closeModal()">فتح الان بـ <span id="total-price">0</span> 💎</button>
-            </div>
-
-            <div id="promo-code-section" style="display: none;">
-                <input type="text" placeholder="أدخل كود الهدية هنا..." style="width: 100%; padding: 15px; border-radius: 10px; border: none; background: #222; color: white; text-align: center; margin: 20px 0; font-size: 16px; font-weight: bold;">
-                <button class="open-btn" style="background: var(--gold); color: black;" onclick="closeModal()">استرداد الكود 🎁</button>
-            </div>
-            
-            <p style="margin-top: 15px; color: var(--text-muted); font-size: 14px; cursor: pointer;" onclick="closeModal()">إلغاء</p>
-        </div>
+        <div class="balance-container">💎 0.241</div>
+        <button class="btn-deposit">Deposit</button>
     </div>
 
     <div class="main-container">
         
-        <div id="page-cases" class="page active">
+        <div id="page-live" class="page active">
             
-            <div class="special-cases">
-                <div class="special-card" onclick="openPromoModal()">
-                    <img src="https://cdn-icons-png.flaticon.com/512/7185/7185711.png" style="width: 60px;">
-                    <h4 style="margin-top: 10px; color: var(--gold);">صندوق الأكواد</h4>
+            <div class="drops-bar">
+                <div class="drop-box gold">📦</div>
+                <div class="drop-box purple">💎</div>
+                <div class="drop-box blue">🚀</div>
+                <div class="drop-box">🍄</div>
+                <div class="drop-box">👑</div>
+            </div>
+
+            <div class="banner-large" onclick="switchPage('page-rocket', document.querySelectorAll('.nav-item')[1])">
+                <div>
+                    <span class="badge badge-hot">⚡ HOT!</span>
+                    <div class="banner-title">🚀 ROCKET</div>
                 </div>
-                <div class="special-card" onclick="alert('سيكون متاحاً بعد 24 ساعة!')">
-                    <img src="https://cdn-icons-png.flaticon.com/512/4213/4213732.png" style="width: 60px;">
-                    <h4 style="margin-top: 10px; color: #00ffcc;">صندوق مجاني</h4>
+                <div style="font-size: 50px; filter: drop-shadow(0 0 10px rgba(255,0,0,0.5)); transform: rotate(45deg);">🚀</div>
+            </div>
+
+            <div class="banner-large">
+                <div>
+                    <span class="badge badge-new">✨ NEW!</span>
+                    <div class="banner-title">⚔️ PVP</div>
+                </div>
+                <div style="display: flex; gap: 5px;">
+                    <div class="avatar" style="border: 2px solid #ffd700;"></div>
+                    <div class="avatar" style="border: 2px solid #00d2ff;"></div>
                 </div>
             </div>
 
-            <h3 style="margin-bottom: 15px; font-style: italic;">PREMIUM CASES</h3>
+            <div class="half-grid">
+                <div class="half-btn"><span>📄 CONTRACTS</span> <span>></span></div>
+                <div class="half-btn green"><span>⬆️ UPGRADE</span> <span>></span></div>
+            </div>
+
+            <div class="free-cases">
+                <div class="free-card">
+                    <img src="https://cdn-icons-png.flaticon.com/512/836/836048.png">
+                    <div style="font-weight: 900; margin-bottom: 5px; color: #ffd700;">FREE24</div>
+                    <button class="free-btn">📅 FREE</button>
+                </div>
+                <div class="free-card">
+                    <img src="https://cdn-icons-png.flaticon.com/512/7185/7185711.png">
+                    <div style="font-weight: 900; margin-bottom: 5px; color: #ffaa00;">PROMO</div>
+                    <button class="free-btn" style="color: white; border-color: white;">🎁 CODE</button>
+                </div>
+            </div>
+
             <div class="cases-grid" id="cases-grid">
                 </div>
         </div>
 
         <div id="page-rocket" class="page">
-            <h2 style="margin-bottom: 15px; text-align: center;">ROCKET CRASH 🚀</h2>
-            
-            <p style="text-align: center; color: var(--text-muted); margin-bottom: 10px;">اختر شكل الصاروخ:</p>
-            <div class="rocket-skin-selector">
-                <div class="skin-btn active" onclick="changeSkin(this, 'https://cdn-icons-png.flaticon.com/512/3256/3256114.png')">
-                    <img src="https://cdn-icons-png.flaticon.com/512/3256/3256114.png">
+            <div style="position: fixed; top: 60px; left: 0; width: 100%; height: calc(100vh - 60px); display: flex; flex-direction: column; background: #0a0a0f;">
+                
+                <div class="rocket-game-area">
+                    <div class="stars-bg"></div>
+                    <div style="font-size: 14px; color: #00C851; position: absolute; top: 20px; left: 20px;">● online</div>
+                    <div style="font-size: 14px; color: var(--text-muted); position: absolute; top: 20px;">NEXT ROUND IN</div>
+                    
+                    <div class="multiplier-text" id="rocket-multi">3</div>
+                    
+                    <img id="rocket-img" src="https://cdn-icons-png.flaticon.com/512/3256/3256114.png" style="width: 80px; position: absolute; bottom: 20px; left: 20px; transform: rotate(45deg); display: none;">
                 </div>
-                <div class="skin-btn" onclick="changeSkin(this, 'https://cdn-icons-png.flaticon.com/512/1356/1356479.png')">
-                    <img src="https://cdn-icons-png.flaticon.com/512/1356/1356479.png">
-                </div>
-                <div class="skin-btn" onclick="changeSkin(this, 'https://cdn-icons-png.flaticon.com/512/1474/1474133.png')">
-                    <img src="https://cdn-icons-png.flaticon.com/512/1474/1474133.png">
-                </div>
-            </div>
 
-            <div class="rocket-container">
-                <div style="font-size: 50px; font-weight: 900; z-index: 2;" id="crash-multiplier">1.00x</div>
-                <img id="main-rocket" src="https://cdn-icons-png.flaticon.com/512/3256/3256114.png" style="width: 60px; position: absolute; bottom: 20px; left: 20px; transform: rotate(45deg); z-index: 2;">
+                <div class="rocket-controls">
+                    <div class="bet-history">
+                        <div class="history-item">1.00x</div>
+                        <div class="history-item green">1.92x</div>
+                        <div class="history-item green">1.53x</div>
+                        <div class="history-item red">4.55x</div>
+                        <div class="history-item green">2.58x</div>
+                    </div>
+                    
+                    <div class="bet-input-group">
+                        <button>-</button>
+                        <input type="number" value="0.20" step="0.1">
+                        <button>+</button>
+                    </div>
+                    
+                    <button class="btn-bet-large">ضع مبلغك</button>
+                </div>
             </div>
-            
-            <button class="open-btn" style="background: linear-gradient(90deg, #ff416c, #ff4b2b);">وضع الرهان</button>
         </div>
 
     </div>
 
     <div class="navbar">
-        <div class="nav-item active" onclick="switchPage('page-cases', this)">
-            <span class="nav-icon">📦</span> الصناديق
-        </div>
-        <div class="nav-item" onclick="switchPage('page-rocket', this)">
-            <span class="nav-icon">🚀</span> الصاروخ
-        </div>
-        <div class="nav-item" onclick="switchPage('page-cases', this)"> <span class="nav-icon">👤</span> حسابي
-        </div>
+        <div class="nav-item active" onclick="switchPage('page-live', this)"><span class="nav-icon">🎮</span> Live</div>
+        <div class="nav-item" onclick="switchPage('page-rocket', this)"><span class="nav-icon">🚀</span> Rocket</div>
+        <div class="nav-item"><span class="nav-icon">🏆</span> Top</div>
+        <div class="nav-item"><span class="nav-icon">👤</span> Profile</div>
     </div>
 
     <script>
-        // 1. توليد الصناديق برمجياً
-        const casesData = [
-            { name: "Sniper Box", price: 0.49, img: "https://cdn-icons-png.flaticon.com/512/2821/2821878.png" },
-            { name: "Starter", price: 10.00, img: "https://cdn-icons-png.flaticon.com/512/674/674468.png" },
-            { name: "Shadow Case", price: 50.00, img: "https://cdn-icons-png.flaticon.com/512/1043/1043446.png" },
-            { name: "Epic Box", price: 100.00, img: "https://cdn-icons-png.flaticon.com/512/836/836048.png" },
-            { name: "Onyx Premium", price: 500.00, img: "https://cdn-icons-png.flaticon.com/512/2632/2632296.png" },
-            { name: "Joyboy Case", price: 9999.00, img: "https://cdn-icons-png.flaticon.com/512/2632/2632074.png" }
+        // 1. توليد 25 صندوق بالأسعار المطلوبة
+        const casesGrid = document.getElementById('cases-grid');
+        const boxImages = [
+            "https://cdn-icons-png.flaticon.com/512/2821/2821878.png", "https://cdn-icons-png.flaticon.com/512/1043/1043446.png",
+            "https://cdn-icons-png.flaticon.com/512/2632/2632296.png", "https://cdn-icons-png.flaticon.com/512/674/674468.png",
+            "https://cdn-icons-png.flaticon.com/512/836/836048.png", "https://cdn-icons-png.flaticon.com/512/2632/2632074.png"
         ];
+        const prices = [0.49, 1.5, 3.0, 5.0, 7.7, 8.0, 10.0, 12.0, 15.0, 20.0, 25.0, 30.0, 50.0, 75.0, 100.0, 150.0, 200.0, 250.0, 300.0, 500.0, 1000.0, 2500.0, 5000.0, 7500.0, 9999.0];
+        
+        prices.forEach((price, index) => {
+            let img = boxImages[index % boxImages.length];
+            let name = "Box " + (index + 1);
+            if(price === 9999.0) name = "Elite VIP";
+            if(price === 0.49) name = "Starter";
 
-        const grid = document.getElementById('cases-grid');
-        casesData.forEach((c) => {
-            grid.innerHTML += `
-                <div class="case-card" onclick="openCaseModal('${c.name}', ${c.price}, '${c.img}')">
-                    <img src="${c.img}" class="case-img">
-                    <h4 style="margin-bottom: 5px;">${c.name}</h4>
-                    <span class="case-price">${c.price} 💎</span>
+            casesGrid.innerHTML += `
+                <div class="case-item">
+                    <img src="${img}">
+                    <div class="case-name">${name}</div>
+                    <div class="case-price">${price} 💎</div>
                 </div>
             `;
         });
 
-        // 2. توليد شريط الجوائز الحقيقي (Live Drops)
-        const dropsData = [
-            { user: "Ali", item: "Joyboy Case", img: "https://cdn-icons-png.flaticon.com/512/2632/2632074.png" },
-            { user: "Omar", item: "150 💎", img: "https://cdn-icons-png.flaticon.com/512/2821/2821878.png" },
-            { user: "Hussein", item: "Shadow NFT", img: "https://cdn-icons-png.flaticon.com/512/1043/1043446.png" },
-            { user: "Murtadha", item: "50 💎", img: "https://cdn-icons-png.flaticon.com/512/674/674468.png" }
-        ];
-        
-        const track = document.getElementById('drops-track');
-        let dropsHTML = "";
-        // نكررها مرتين حتى يصير تأثير السكرول لا نهائي
-        for(let i=0; i<3; i++) {
-            dropsData.forEach(d => {
-                dropsHTML += `
-                    <div class="drop-item">
-                        <img src="${d.img}" class="drop-img">
-                        <span style="font-size: 11px; color: var(--text-muted);">${d.user} ربح</span>
-                        <span style="font-size: 12px; font-weight: bold; color: var(--gold);">${d.item}</span>
-                    </div>
-                `;
-            });
-        }
-        track.innerHTML = dropsHTML;
-
-        // 3. التحكم بالنافذة المنبثقة والفتح المتعدد
-        let currentPrice = 0;
-        let currentMultiplier = 1;
-
-        function openCaseModal(name, price, img) {
-            currentPrice = price;
-            currentMultiplier = 1;
-            document.getElementById('modal-title').innerText = name;
-            document.getElementById('modal-img').src = img;
-            document.getElementById('total-price').innerText = price.toFixed(2);
-            
-            document.getElementById('multi-open-section').style.display = 'block';
-            document.getElementById('promo-code-section').style.display = 'none';
-            
-            // تصفير الأزرار
-            document.querySelectorAll('.multi-btn').forEach(b => b.classList.remove('active'));
-            document.querySelector('.multi-btn').classList.add('active'); // تفعيل x1
-            
-            document.getElementById('modal').style.display = 'flex';
-        }
-
-        function openPromoModal() {
-            document.getElementById('modal-title').innerText = "استرداد كود الهدية";
-            document.getElementById('modal-img').src = "https://cdn-icons-png.flaticon.com/512/7185/7185711.png";
-            document.getElementById('multi-open-section').style.display = 'none';
-            document.getElementById('promo-code-section').style.display = 'block';
-            document.getElementById('modal').style.display = 'flex';
-        }
-
-        function selectAmount(amount, element) {
-            currentMultiplier = amount;
-            document.querySelectorAll('.multi-btn').forEach(b => b.classList.remove('active'));
-            element.classList.add('active');
-            document.getElementById('total-price').innerText = (currentPrice * amount).toFixed(2);
-        }
-
-        function closeModal() { document.getElementById('modal').style.display = 'none'; }
-
-        // 4. تغيير سكن الصاروخ
-        function changeSkin(element, imgSrc) {
-            document.querySelectorAll('.skin-btn').forEach(b => b.classList.remove('active'));
-            element.classList.add('active');
-            document.getElementById('main-rocket').src = imgSrc;
-        }
-
-        // 5. التبديل بين الصفحات
+        // 2. التبديل بين الصفحات
         function switchPage(pageId, element) {
-            document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
-            document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
             document.getElementById(pageId).classList.add('active');
             element.classList.add('active');
-        }
-
-        // جلب بيانات المستخدم (يوزر واسم وصورة)
-        const tg = window.Telegram.WebApp;
-        tg.expand();
-        if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
-            const user = tg.initDataUnsafe.user;
-            document.getElementById('user-name').innerText = user.first_name;
-            if (user.photo_url) {
-                document.getElementById('user-img').style.backgroundImage = `url('${user.photo_url}')`;
-                document.getElementById('user-img').style.backgroundSize = 'cover';
+            
+            // إخفاء الهيدر في صفحة الصاروخ (مثل الفيديو)
+            if(pageId === 'page-rocket') {
+                document.querySelector('.header').style.display = 'none';
+            } else {
+                document.querySelector('.header').style.display = 'flex';
             }
         }
     </script>
