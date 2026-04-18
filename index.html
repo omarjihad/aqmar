@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>NFT Crash - 10 Models Edition</title>
+    <title>Rocket Crash - Multiplayer UI</title>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@600;800;900&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -18,409 +18,364 @@
         }
 
         * { box-sizing: border-box; font-family: 'Cairo', sans-serif; margin: 0; padding: 0; user-select: none; -webkit-tap-highlight-color: transparent; }
-        body { background-color: var(--bg-deep); color: var(--text-main); overflow: hidden; display: flex; flex-direction: column; height: 100vh; }
+        body { background-color: var(--bg-deep); color: var(--text-main); overflow-x: hidden; display: flex; flex-direction: column; height: 100vh; }
 
         /* الهيدر العلوي */
-        .header { display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; z-index: 100; position: relative; background: var(--bg-deep); border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .header { display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; z-index: 100; position: sticky; top: 0; background: var(--bg-deep); border-bottom: 1px solid rgba(255,255,255,0.05); }
         .online-status { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--success); font-weight: bold; }
-        .dot { width: 8px; height: 8px; background: var(--success); border-radius: 50%; box-shadow: 0 0 8px var(--success); animation: blink 1.5s infinite; }
+        .dot { width: 8px; height: 8px; background: var(--success); border-radius: 50%; animation: blink 1.5s infinite; }
         @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
-        .balance-box { background: rgba(255,255,255,0.08); padding: 5px 12px; border-radius: 20px; font-weight: 900; font-size: 14px; display: flex; align-items: center; gap: 5px; border: 1px solid rgba(255,255,255,0.05); }
+        .balance-box { background: rgba(255,255,255,0.08); padding: 5px 12px; border-radius: 20px; font-weight: 900; font-size: 15px; border: 1px solid rgba(255,255,255,0.1); }
 
-        /* منطقة اللعبة */
-        .rocket-page { flex: 1; display: flex; flex-direction: column; }
-        .game-area { height: 40vh; min-height: 280px; position: relative; overflow: hidden; display: flex; justify-content: center; align-items: center; flex-direction: column; border-bottom: 2px solid #1a1a24; }
-        .stars { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: url('https://www.transparenttextures.com/patterns/stardust.png'); opacity: 0.2; }
+        /* منطقة اللعبة (الصاروخ) */
+        .rocket-page { flex: 1; display: flex; flex-direction: column; overflow-y: auto; }
+        .game-area { height: 40vh; min-height: 300px; position: relative; overflow: hidden; display: flex; justify-content: center; align-items: center; flex-direction: column; border-bottom: 2px solid #1a1a24; flex-shrink: 0; }
+        .stars { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: url('https://www.transparenttextures.com/patterns/stardust.png'); opacity: 0.3; }
         
-        .status-text { font-size: 13px; color: var(--text-muted); letter-spacing: 1px; margin-bottom: 5px; z-index: 10; font-weight: bold; }
-        .multiplier { font-size: 80px; font-weight: 900; z-index: 10; text-shadow: 0 0 20px rgba(255,255,255,0.1); transition: color 0.2s; margin-top: -20px; }
+        .status-text { font-size: 14px; color: var(--text-muted); letter-spacing: 1px; margin-bottom: 5px; z-index: 10; font-weight: bold; }
+        .multiplier { font-size: 85px; font-weight: 900; z-index: 10; text-shadow: 0 0 20px rgba(255,255,255,0.1); transition: color 0.2s; margin-top: -15px; }
         
-        /* الأنيميشن اللي يخلي الصورة كأنها فيديو (تهتز وتصعد) */
-        .rocket-container { position: absolute; bottom: 15%; left: 15%; z-index: 5; display: none; transition: transform 0.1s linear; }
-        .rocket-img { width: 90px; filter: drop-shadow(0 10px 15px rgba(0,0,0,0.6)); animation: floatGlow 1.5s infinite ease-in-out; }
-        @keyframes floatGlow { 0%, 100% { filter: drop-shadow(0 10px 15px rgba(0,0,0,0.6)); transform: translateY(0px) rotate(5deg); } 50% { filter: drop-shadow(0 10px 25px rgba(0,152,234,0.4)); transform: translateY(-5px) rotate(-5deg); } }
+        /* الصاروخ والأنيميشن الفخم */
+        .rocket-container { position: absolute; bottom: 10%; left: 15%; z-index: 5; display: none; }
+        .rocket-img { width: 90px; filter: drop-shadow(0 10px 20px rgba(0, 152, 234, 0.5)); }
+        
+        /* اهتزاز الصاروخ أثناء الطيران */
+        .flying-anim { animation: rocketThrust 0.1s infinite alternate; }
+        @keyframes rocketThrust { 0% { transform: translate(0, 0) rotate(45deg); } 100% { transform: translate(-2px, 2px) rotate(45deg); } }
         
         .trail-svg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 4; pointer-events: none; }
-        .trail-path { fill: none; stroke: var(--gold); stroke-width: 4; stroke-linecap: round; filter: drop-shadow(0 0 8px rgba(255, 215, 0, 0.8)); }
+        .trail-path { fill: none; stroke: var(--gold); stroke-width: 5; stroke-linecap: round; filter: drop-shadow(0 0 10px rgba(255, 215, 0, 1)); }
 
-        /* منطقة التحكم */
-        .controls { flex: 1; padding: 20px; z-index: 10; background: var(--bg-deep); display: flex; flex-direction: column; align-items: center; }
+        /* منطقة التحكم والرهانات الحية */
+        .controls-section { padding: 20px; background: var(--bg-deep); flex: 1; }
         
-        .history { display: flex; gap: 8px; overflow-x: auto; width: 100%; margin-bottom: 25px; padding-bottom: 5px; }
-        .history::-webkit-scrollbar { display: none; }
-        .h-badge { padding: 5px 14px; border-radius: 12px; font-size: 13px; font-weight: 900; border: 1px solid rgba(255,255,255,0.1); background: #1a1a1a; }
-        .h-badge.good { color: var(--success); background: rgba(0, 230, 118, 0.1); border-color: rgba(0, 230, 118, 0.3); }
-        .h-badge.bad { color: var(--danger); background: rgba(255, 59, 48, 0.1); border-color: rgba(255, 59, 48, 0.3); }
-
-        .btn-main { width: 100%; max-width: 400px; padding: 20px; border-radius: 16px; font-size: 22px; font-weight: 900; color: white; border: none; cursor: pointer; transition: 0.2s; background: linear-gradient(90deg, #5d2de2, #0098ea); box-shadow: 0 5px 15px rgba(93, 45, 226, 0.4); font-family: 'Cairo'; margin-top: auto; margin-bottom: 20px; }
+        .btn-main { width: 100%; padding: 20px; border-radius: 16px; font-size: 22px; font-weight: 900; color: white; border: none; cursor: pointer; transition: 0.2s; background: linear-gradient(90deg, #5d2de2, #0098ea); box-shadow: 0 5px 15px rgba(93, 45, 226, 0.4); font-family: 'Cairo'; margin-bottom: 25px; }
         .btn-main:active { transform: scale(0.96); }
-        .btn-main.cancel { background: #4a4a5a; box-shadow: none; }
-        .btn-main.queued { background: #d35400; box-shadow: 0 5px 15px rgba(211, 84, 0, 0.4); }
+        .btn-main.cancel { background: #d35400; box-shadow: 0 5px 15px rgba(211, 84, 0, 0.4); }
         .btn-main.cashout { background: var(--success); color: #000; box-shadow: 0 5px 15px rgba(0, 230, 118, 0.4); }
 
-        /* ================= نافذة الرهان ================= */
-        .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 1000; display: none; opacity: 0; transition: opacity 0.3s; backdrop-filter: blur(5px); }
-        .bottom-sheet { position: fixed; bottom: -100%; left: 0; width: 100%; background: var(--bg-panel); border-top-left-radius: 24px; border-top-right-radius: 24px; z-index: 1001; transition: bottom 0.3s cubic-bezier(0.175, 0.885, 0.32, 1); padding: 20px 20px 40px 20px; box-shadow: 0 -10px 40px rgba(0,0,0,0.8); border-top: 1px solid rgba(255,255,255,0.05); }
+        /* ================= قائمة اللاعبين (Live Bets) ================= */
+        .live-bets-header { display: flex; justify-content: space-between; font-size: 14px; font-weight: bold; color: var(--text-muted); margin-bottom: 10px; padding: 0 10px; }
+        .players-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 30px; }
+        .player-card { display: flex; align-items: center; justify-content: space-between; background: rgba(255,255,255,0.03); padding: 12px 15px; border-radius: 14px; border: 1px solid rgba(255,255,255,0.05); transition: 0.3s; }
         
-        .sheet-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; font-size: 18px; font-weight: bold; }
-        .close-btn { background: rgba(255,255,255,0.1); border: none; color: white; width: 30px; height: 30px; border-radius: 50%; font-weight: bold; cursor: pointer; }
-
-        .tabs { display: flex; background: rgba(255,255,255,0.05); border-radius: 12px; padding: 4px; margin-bottom: 25px; border: 1px solid rgba(255,255,255,0.03); }
-        .tab-btn { flex: 1; text-align: center; padding: 12px; font-weight: bold; font-size: 14px; border-radius: 10px; color: var(--text-muted); cursor: pointer; transition: 0.2s; }
-        .tab-btn.active { background: #2a2a35; color: white; box-shadow: 0 2px 10px rgba(0,0,0,0.3); }
-
-        .ton-content { display: block; }
-        .gifts-content { display: none; text-align: center; padding: 30px 0; color: var(--text-muted); border: 1px dashed #333; border-radius: 12px; }
-
-        .balance-row { display: flex; justify-content: space-between; font-size: 13px; color: var(--text-muted); margin-bottom: 10px; padding: 0 5px; }
+        .player-info { display: flex; align-items: center; gap: 10px; }
+        .player-avatar { width: 35px; height: 35px; border-radius: 50%; border: 2px solid #333; }
+        .player-name { font-size: 14px; font-weight: bold; }
+        .player-bet { font-size: 12px; color: var(--text-muted); display: flex; align-items: center; gap: 4px; }
         
-        .input-box { background: #0a0a10; border: 1px solid #2a2a35; border-radius: 12px; display: flex; align-items: center; padding: 15px; margin-bottom: 25px; }
-        .input-box input { flex: 1; background: transparent; border: none; color: white; font-size: 20px; font-weight: bold; outline: none; }
-        .input-box span { color: var(--ton-blue); font-weight: bold; font-size: 20px; }
+        .player-profit { font-weight: 900; font-size: 16px; transition: 0.2s; }
+        .player-card.cashed { background: rgba(0, 230, 118, 0.1); border-color: rgba(0, 230, 118, 0.3); }
+        .player-card.cashed .player-profit { color: var(--success); }
+        .player-card.crashed { background: rgba(255, 59, 48, 0.1); border-color: rgba(255, 59, 48, 0.3); opacity: 0.7; }
+        .player-card.crashed .player-profit { color: var(--danger); }
 
-        .auto-cashout-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; background: rgba(255,255,255,0.03); padding: 15px; border-radius: 14px; border: 1px solid rgba(255,255,255,0.03); }
-        .auto-cashout-row span { font-size: 14px; font-weight: bold; }
-        .auto-input { width: 85px; background: #0a0a10; border: 1px solid #333; border-radius: 10px; color: white; text-align: center; padding: 10px; font-weight: bold; display: none; font-size: 16px; outline: none; }
-        
-        .switch { position: relative; display: inline-block; width: 48px; height: 28px; }
-        .switch input { opacity: 0; width: 0; height: 0; }
-        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #333; transition: .4s; border-radius: 34px; border: 1px solid rgba(255,255,255,0.05); }
-        .slider:before { position: absolute; content: ""; height: 20px; width: 20px; left: 4px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; box-shadow: 0 2px 5px rgba(0,0,0,0.3); }
-        input:checked + .slider { background-color: var(--success); }
-        input:checked + .slider:before { transform: translateX(20px); }
+        /* نافذة إدخال الرهان (Modal) */
+        .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; display: none; backdrop-filter: blur(5px); }
+        .modal { position: fixed; bottom: -100%; left: 0; width: 100%; background: var(--bg-panel); border-top-left-radius: 24px; border-top-right-radius: 24px; z-index: 1001; transition: 0.3s; padding: 25px; box-shadow: 0 -10px 40px rgba(0,0,0,0.8); }
+        .modal-header { display: flex; justify-content: space-between; font-size: 18px; font-weight: bold; margin-bottom: 20px; }
+        .input-box { background: #0a0a10; border: 1px solid #333; border-radius: 12px; display: flex; align-items: center; padding: 15px; margin-bottom: 20px; }
+        .input-box input { flex: 1; background: transparent; border: none; color: white; font-size: 22px; font-weight: bold; outline: none; }
+        .confirm-btn { width: 100%; padding: 18px; border-radius: 14px; font-size: 18px; font-weight: 900; background: var(--ton-blue); color: white; border: none; cursor: pointer; }
     </style>
 </head>
 <body>
 
     <div class="header">
-        <div class="online-status"><div class="dot"></div> online</div>
-        <div class="balance-box">💎 <span id="main-balance">100.00</span></div>
+        <div class="online-status"><div class="dot"></div> <span id="online-count">124</span> online</div>
+        <div class="balance-box">💎 <span id="main-balance">0.00</span></div>
     </div>
 
     <div class="rocket-page">
         <div class="game-area">
             <div class="stars"></div>
-            <svg class="trail-svg" preserveAspectRatio="none">
-                <path id="flight-path" class="trail-path" d="" />
-            </svg>
+            <svg class="trail-svg" preserveAspectRatio="none"><path id="flight-path" class="trail-path" d="" /></svg>
 
             <div class="status-text" id="status-text">NEXT ROUND IN</div>
-            <div class="multiplier" id="multi-text">3</div>
+            <div class="multiplier" id="multi-text">5</div>
             
             <div class="rocket-container" id="rocket">
-                <img src="" class="rocket-img" id="rocket-img">
+                <img src="https://cdn-icons-png.flaticon.com/512/3256/3256114.png" class="rocket-img flying-anim" id="rocket-img">
             </div>
         </div>
 
-        <div class="controls">
-            <div class="history" id="history-bar"></div>
-            <button class="btn-main" id="action-btn" onclick="handleMainAction()">ضع مبلغك</button>
+        <div class="controls-section">
+            <button class="btn-main" id="action-btn" onclick="handleAction()">ضع مبلغك (Place Bet)</button>
+
+            <div class="live-bets-header">
+                <span>Players</span>
+                <span>Profit / Multiplier</span>
+            </div>
+            
+            <div class="players-list" id="players-list">
+                </div>
         </div>
     </div>
 
-    <div class="overlay" id="overlay" onclick="closeBetModal()"></div>
-    <div class="bottom-sheet" id="bet-sheet">
-        <div class="sheet-header">
-            <span>Place bet</span>
-            <button class="close-btn" onclick="closeBetModal()">✕</button>
+    <div class="overlay" id="overlay" onclick="closeModal()"></div>
+    <div class="modal" id="bet-modal">
+        <div class="modal-header">
+            <span>Bet Amount</span>
+            <span onclick="closeModal()" style="cursor:pointer; color:var(--text-muted);">✕</span>
         </div>
-
-        <div class="tabs">
-            <div class="tab-btn" id="tab-gifts" onclick="switchTab('gifts')">Gifts</div>
-            <div class="tab-btn active" id="tab-ton" onclick="switchTab('ton')">TON</div>
+        <div class="input-box">
+            <input type="number" id="bet-input" value="1.00" step="0.5" min="0.5">
+            <span style="color:var(--ton-blue); font-weight:bold;">TON 💎</span>
         </div>
-
-        <div class="gifts-content" id="gifts-content">
-            <div style="font-size: 50px; margin-bottom: 15px;">🎒</div>
-            <p style="font-size: 14px;">لا توجد هدايا متاحة للرهان حالياً.</p>
-        </div>
-
-        <div class="ton-content" id="ton-content">
-            <div class="balance-row">
-                <span>Available Balance</span>
-                <span style="color: white; font-weight: bold;"><span id="modal-balance">100.00</span> 💎</span>
-            </div>
-            
-            <div class="input-box">
-                <input type="number" id="bet-amount-input" value="1.00" step="0.5" min="0.5" oninput="updateBetButton()">
-                <span>💎</span>
-            </div>
-
-            <div class="auto-cashout-row">
-                <div style="display: flex; align-items: center; gap: 10px;">
-                    <label class="switch">
-                        <input type="checkbox" id="auto-cashout-toggle" onchange="toggleAutoCashout()">
-                        <span class="slider"></span>
-                    </label>
-                    <span>Auto cashout</span>
-                </div>
-                <input type="number" id="auto-cashout-value" class="auto-input" value="2.00" step="0.1" min="1.1">
-            </div>
-
-            <button class="btn-main" style="margin-bottom: 0;" id="confirm-bet-btn" onclick="confirmBet()">Place 1.00 TON Bet 🚀</button>
-        </div>
+        <button class="confirm-btn" onclick="confirmBet()">تأكيد الرهان</button>
     </div>
 
     <script>
-        // ====== الـ 10 نماذج الخاصة بالـ NFTs ======
-        // يرجى استبدال هذه الروابط المؤقتة بروابط صورك الحقيقية بصيغة PNG شفافة
-        const nftGifts = [
-            "https://cdn-icons-png.flaticon.com/512/1043/1043446.png", // 1. بديل الـ Banana
-            "https://cdn-icons-png.flaticon.com/512/2821/2821878.png", // 2. بديل الـ Bitcoin
-            "https://cdn-icons-png.flaticon.com/512/836/836048.png",   // 3. بديل الـ Space Veggie
-            "https://cdn-icons-png.flaticon.com/512/2632/2632074.png", // 4. بديل الـ Police Box
-            "https://cdn-icons-png.flaticon.com/512/2632/2632296.png", // 5. بديل الـ Fishing Cat
-            "https://cdn-icons-png.flaticon.com/512/674/674468.png",   // 6. بديل الـ Baby Carrot
-            "https://cdn-icons-png.flaticon.com/512/7185/7185711.png", // 7. بديل الـ Little Journey
-            "https://cdn-icons-png.flaticon.com/512/1940/1940842.png", // 8. بديل الـ Mission Uranus
-            "https://cdn-icons-png.flaticon.com/512/2855/2855422.png", // 9. بديل الـ Soap Bubbles
-            "https://cdn-icons-png.flaticon.com/512/3256/3256114.png"  // 10. بديل الـ Rocket Plush
-        ];
+        // ================= نظام الحفظ (Persistence) =================
+        // هذا يخلي الرصيد ينحفظ بتليفون اللاعب حتى لو طلع ورجع
+        let balance = parseFloat(localStorage.getItem('user_balance'));
+        if (isNaN(balance)) balance = 100.00; // رصيد البداية لأول مرة
+        
+        function updateBalance(amount) {
+            balance += amount;
+            document.getElementById('main-balance').innerText = balance.toFixed(2);
+            localStorage.setItem('user_balance', balance.toFixed(2)); // حفظ الرصيد
+        }
+        updateBalance(0); // تحديث الشاشة بالبداية
 
-        let balance = 100.00;
+        // ================= متغيرات اللعبة =================
         let gameState = 'waiting'; 
         let currentMultiplier = 1.00;
         let crashPoint = 1.00;
-        
-        let betPlaced = false;       
-        let betAmount = 0;
-        let isCashedOut = false;
-        let queuedBetAmount = 0;     
-        
-        let autoCashoutEnabled = false;
-        let autoCashoutMultiplier = 2.00;
-
-        let gameInterval;
         let animationTime = 0;
+        let gameInterval;
+        
+        let myBetAmount = 0;
+        let myBetPlaced = false;
+        let amICashedOut = false;
+        let queuedBet = 0; // للرهان أثناء الطيران
 
+        // عناصر الشاشة
         const multiText = document.getElementById('multi-text');
         const statusText = document.getElementById('status-text');
         const rocket = document.getElementById('rocket');
         const rocketImg = document.getElementById('rocket-img');
         const flightPath = document.getElementById('flight-path');
         const actionBtn = document.getElementById('action-btn');
-        const historyBar = document.getElementById('history-bar');
+        const playersList = document.getElementById('players-list');
 
-        function openBetModal() {
-            document.getElementById('overlay').style.display = 'block';
-            setTimeout(() => { document.getElementById('overlay').style.opacity = '1'; }, 10);
-            document.getElementById('bet-sheet').style.bottom = '0';
+        // ================= نظام اللاعبين الوهميين (Multiplayer Simulation) =================
+        const fakeNames = ["Ali", "Omar", "Dexter", "Sarah", "John_99", "CryptoKing", "Murtadha", "Ahmad_IQ", "Zoro"];
+        let livePlayers = [];
+
+        function generateFakePlayers() {
+            livePlayers = [];
+            playersList.innerHTML = '';
+            let numPlayers = Math.floor(Math.random() * 4) + 3; // من 3 إلى 6 لاعبين يدخلون كل جولة
+            
+            document.getElementById('online-count').innerText = Math.floor(Math.random() * 50) + 100;
+
+            for(let i=0; i<numPlayers; i++) {
+                let name = fakeNames[Math.floor(Math.random() * fakeNames.length)];
+                let bet = (Math.random() * 10 + 0.5).toFixed(2);
+                let targetCashout = (Math.random() * 3 + 1.1).toFixed(2); // الرقم اللي راح يسحب عنده
+                
+                livePlayers.push({
+                    id: 'player_' + i,
+                    name: name,
+                    bet: bet,
+                    target: targetCashout,
+                    cashedOut: false
+                });
+
+                // رسم اللاعب بالشاشة
+                playersList.innerHTML += `
+                    <div class="player-card" id="card_player_${i}">
+                        <div class="player-info">
+                            <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=${name}" class="player-avatar">
+                            <div>
+                                <div class="player-name">${name}</div>
+                                <div class="player-bet">${bet} 💎</div>
+                            </div>
+                        </div>
+                        <div class="player-profit" id="profit_player_${i}">-</div>
+                    </div>
+                `;
+            }
         }
 
-        function closeBetModal() {
-            document.getElementById('overlay').style.opacity = '0';
-            document.getElementById('bet-sheet').style.bottom = '-100%';
+        function updateFakePlayers(currentMulti) {
+            livePlayers.forEach(p => {
+                if (!p.cashedOut) {
+                    let liveProfit = (p.bet * currentMulti).toFixed(2);
+                    document.getElementById('profit_player_' + p.id).innerText = liveProfit + ' 💎';
+                    
+                    // إذا وصل للرقم اللي يريده، يسحب ويصير أخضر!
+                    if (currentMulti >= p.target) {
+                        p.cashedOut = true;
+                        document.getElementById('card_player_' + p.id).classList.add('cashed');
+                        document.getElementById('profit_player_' + p.id).innerText = liveProfit + ' 💎 (' + currentMulti.toFixed(2) + 'x)';
+                    }
+                }
+            });
+        }
+
+        function crashFakePlayers() {
+            livePlayers.forEach(p => {
+                if (!p.cashedOut) {
+                    document.getElementById('card_player_' + p.id).classList.add('crashed');
+                    document.getElementById('profit_player_' + p.id).innerText = '-' + p.bet + ' 💎';
+                }
+            });
+        }
+
+        // ================= دوال الرهان =================
+        function handleAction() {
+            if (queuedBet > 0) {
+                updateBalance(queuedBet); queuedBet = 0;
+                actionBtn.innerText = "ضع مبلغك"; actionBtn.className = "btn-main";
+            }
+            else if (gameState === 'waiting') {
+                if (myBetPlaced) {
+                    updateBalance(myBetAmount); myBetPlaced = false; myBetAmount = 0;
+                    actionBtn.innerText = "ضع مبلغك"; actionBtn.className = "btn-main";
+                    document.getElementById('my_card')?.remove(); // مسح بطاقتي
+                } else { document.getElementById('overlay').style.display = 'block'; document.getElementById('bet-modal').style.bottom = '0'; }
+            } 
+            else if (gameState === 'flying') {
+                if (myBetPlaced && !amICashedOut) { manualCashout(); } 
+                else { document.getElementById('overlay').style.display = 'block'; document.getElementById('bet-modal').style.bottom = '0'; }
+            }
+            else if (gameState === 'crashed') {
+                document.getElementById('overlay').style.display = 'block'; document.getElementById('bet-modal').style.bottom = '0';
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('bet-modal').style.bottom = '-100%';
             setTimeout(() => { document.getElementById('overlay').style.display = 'none'; }, 300);
         }
 
-        function switchTab(tab) {
-            document.getElementById('tab-gifts').classList.remove('active');
-            document.getElementById('tab-ton').classList.remove('active');
-            document.getElementById('gifts-content').style.display = 'none';
-            document.getElementById('ton-content').style.display = 'none';
-
-            if(tab === 'gifts') {
-                document.getElementById('tab-gifts').classList.add('active');
-                document.getElementById('gifts-content').style.display = 'block';
-            } else {
-                document.getElementById('tab-ton').classList.add('active');
-                document.getElementById('ton-content').style.display = 'block';
-            }
-        }
-
-        function toggleAutoCashout() {
-            autoCashoutEnabled = document.getElementById('auto-cashout-toggle').checked;
-            const autoInput = document.getElementById('auto-cashout-value');
-            autoInput.style.display = autoCashoutEnabled ? 'block' : 'none';
-        }
-
-        function updateBetButton() {
-            let val = document.getElementById('bet-amount-input').value;
-            if(!val || val < 0.5) val = 0.5;
-            document.getElementById('confirm-bet-btn').innerText = `Place ${val} TON Bet 🚀`;
-        }
-
-        function updateBalance(amount) {
-            balance += amount;
-            document.getElementById('main-balance').innerText = balance.toFixed(2);
-            document.getElementById('modal-balance').innerText = balance.toFixed(2);
-        }
-
         function confirmBet() {
-            let amount = parseFloat(document.getElementById('bet-amount-input').value);
-            if (!amount || amount < 0.5) amount = 0.5;
-            if (amount > balance) { alert("رصيد غير كافٍ!"); return; }
+            let amount = parseFloat(document.getElementById('bet-input').value);
+            if (amount > balance) { alert("رصيدك غير كافٍ!"); return; }
             
-            if(autoCashoutEnabled) { autoCashoutMultiplier = parseFloat(document.getElementById('auto-cashout-value').value); }
-
             updateBalance(-amount);
 
             if (gameState === 'waiting') {
-                betPlaced = true;
-                betAmount = amount;
-                isCashedOut = false;
-                actionBtn.innerText = "إلغاء الرهان (Cancel)";
-                actionBtn.className = "btn-main cancel";
-            } else {
-                queuedBetAmount = amount;
-                actionBtn.innerText = "انتظر الجولة القادمة (إلغاء)";
-                actionBtn.className = "btn-main queued";
-            }
-            closeBetModal();
-        }
+                myBetPlaced = true; myBetAmount = amount; amICashedOut = false;
+                actionBtn.innerText = "إلغاء الرهان"; actionBtn.className = "btn-main cancel";
+                
+                // إضافة اسمك للقائمة!
+                playersList.innerHTML = `
+                    <div class="player-card" id="my_card" style="border-color:var(--ton-blue);">
+                        <div class="player-info">
+                            <img src="https://via.placeholder.com/35" class="player-avatar">
+                            <div><div class="player-name">أنت (YOU)</div><div class="player-bet">${amount} 💎</div></div>
+                        </div>
+                        <div class="player-profit" id="my_profit">في الانتظار</div>
+                    </div>
+                ` + playersList.innerHTML;
 
-        function handleMainAction() {
-            if (queuedBetAmount > 0) {
-                updateBalance(queuedBetAmount);
-                queuedBetAmount = 0;
-                actionBtn.innerText = "ضع مبلغك";
-                actionBtn.className = "btn-main";
-                if (gameState === 'flying' && !betPlaced) {
-                    actionBtn.innerText = "ضع مبلغك";
-                    actionBtn.className = "btn-main";
-                }
+            } else {
+                queuedBet = amount;
+                actionBtn.innerText = "انتظر الجولة القادمة (إلغاء)"; actionBtn.className = "btn-main cancel";
             }
-            else if (gameState === 'waiting') {
-                if (betPlaced) {
-                    updateBalance(betAmount);
-                    betPlaced = false;
-                    betAmount = 0;
-                    actionBtn.innerText = "ضع مبلغك";
-                    actionBtn.className = "btn-main";
-                } else {
-                    openBetModal();
-                }
-            } 
-            else if (gameState === 'flying') {
-                if (betPlaced && !isCashedOut) {
-                    manualCashout();
-                } else {
-                    openBetModal();
-                }
-            }
-            else if (gameState === 'crashed') {
-                openBetModal();
-            }
+            closeModal();
         }
 
         function manualCashout() {
-            if(!betPlaced || isCashedOut) return;
-            isCashedOut = true;
-            let winAmount = betAmount * currentMultiplier;
+            if(!myBetPlaced || amICashedOut) return;
+            amICashedOut = true;
+            let winAmount = myBetAmount * currentMultiplier;
             updateBalance(winAmount);
             
-            actionBtn.innerText = `ربحت ${winAmount.toFixed(2)} 💎`;
-            actionBtn.className = "btn-main cashout";
+            actionBtn.innerText = `ربحت ${winAmount.toFixed(2)} 💎`; actionBtn.className = "btn-main cashout";
+            
+            // تحديث بطاقتي باللون الأخضر
+            let myCard = document.getElementById('my_card');
+            if(myCard) {
+                myCard.classList.add('cashed');
+                document.getElementById('my_profit').innerText = winAmount.toFixed(2) + ' 💎';
+            }
         }
 
-        function generateCrashPoint() {
-            if (Math.random() < 0.05) return 1.00;
-            return Math.max(1.01, (0.99 / Math.random())).toFixed(2);
-        }
-
-        function addToHistory(multiplier) {
-            let badge = document.createElement('div');
-            badge.innerText = multiplier + "x";
-            badge.className = parseFloat(multiplier) >= 2.0 ? "h-badge good" : "h-badge bad";
-            historyBar.prepend(badge);
-        }
-
+        // ================= محرك اللعبة =================
         function startRound() {
-            gameState = 'waiting';
-            currentMultiplier = 1.00;
-            animationTime = 0;
-            crashPoint = generateCrashPoint();
+            gameState = 'waiting'; currentMultiplier = 1.00; animationTime = 0;
+            crashPoint = (Math.random() < 0.05) ? 1.00 : Math.max(1.01, (0.99 / Math.random())).toFixed(2);
             
-            rocket.style.display = 'none';
-            flightPath.setAttribute('d', '');
-            multiText.style.color = 'var(--text-main)';
-            statusText.innerText = "NEXT ROUND IN";
-            
-            // هنا يختار واحد من الـ 10 نماذج بشكل عشوائي كل جولة
-            const randomIndex = Math.floor(Math.random() * nftGifts.length);
-            rocketImg.src = nftGifts[randomIndex];
+            rocket.style.display = 'none'; flightPath.setAttribute('d', '');
+            multiText.style.color = 'var(--text-main)'; statusText.innerText = "NEXT ROUND IN";
+            rocketImg.src = "https://cdn-icons-png.flaticon.com/512/3256/3256114.png"; // صاروخ كلاسيكي
+            rocketImg.classList.remove('flying-anim'); // إيقاف الاهتزاز بالانتظار
 
-            if (queuedBetAmount > 0) {
-                betPlaced = true;
-                betAmount = queuedBetAmount;
-                queuedBetAmount = 0;
-                isCashedOut = false;
-                actionBtn.innerText = "إلغاء الرهان (Cancel)";
-                actionBtn.className = "btn-main cancel";
-            } else if (!betPlaced) {
-                actionBtn.innerText = "ضع مبلغك";
-                actionBtn.className = "btn-main";
+            generateFakePlayers();
+
+            if (queuedBet > 0) {
+                myBetPlaced = true; myBetAmount = queuedBet; queuedBet = 0; amICashedOut = false;
+                actionBtn.innerText = "إلغاء الرهان"; actionBtn.className = "btn-main cancel";
+                playersList.innerHTML = `
+                    <div class="player-card" id="my_card" style="border-color:var(--ton-blue);">
+                        <div class="player-info"><img src="https://via.placeholder.com/35" class="player-avatar"><div><div class="player-name">أنت (YOU)</div><div class="player-bet">${myBetAmount} 💎</div></div></div>
+                        <div class="player-profit" id="my_profit">في الانتظار</div>
+                    </div>
+                ` + playersList.innerHTML;
+            } else if (!myBetPlaced) {
+                actionBtn.innerText = "ضع مبلغك (Place Bet)"; actionBtn.className = "btn-main";
             }
 
             let countdown = 5;
             let waitInterval = setInterval(() => {
-                multiText.innerText = countdown;
-                countdown--;
-                if (countdown < 0) {
-                    clearInterval(waitInterval);
-                    launchRocket();
-                }
+                multiText.innerText = countdown; countdown--;
+                if (countdown < 0) { clearInterval(waitInterval); launchRocket(); }
             }, 1000);
         }
 
         function launchRocket() {
-            gameState = 'flying';
-            statusText.innerText = "CURRENT PAYOUT";
+            gameState = 'flying'; statusText.innerText = "CURRENT PAYOUT";
             rocket.style.display = 'block';
+            rocketImg.classList.add('flying-anim'); // تشغيل اهتزاز الصاروخ!
             
-            if (betPlaced && !isCashedOut) {
-                actionBtn.innerText = "سحب (Cashout)";
-                actionBtn.className = "btn-main";
-            } else if (!betPlaced && queuedBetAmount == 0) {
-                actionBtn.innerText = "ضع مبلغك";
-                actionBtn.className = "btn-main";
-            }
+            if (myBetPlaced && !amICashedOut) { actionBtn.innerText = "سحب (Cashout)"; actionBtn.className = "btn-main"; }
 
             gameInterval = setInterval(() => {
                 animationTime += 0.03;
                 currentMultiplier += 0.002 * Math.pow(animationTime, 1.3);
-                
                 multiText.innerText = currentMultiplier.toFixed(2) + "x";
 
-                if (betPlaced && !isCashedOut && autoCashoutEnabled && currentMultiplier >= autoCashoutMultiplier) {
-                    manualCashout();
+                // تحديث أرباح اللاعبين الوهميين وأرباحي
+                updateFakePlayers(currentMultiplier);
+                if (myBetPlaced && !amICashedOut && document.getElementById('my_profit')) {
+                    document.getElementById('my_profit').innerText = (myBetAmount * currentMultiplier).toFixed(2) + ' 💎';
                 }
 
+                // حركة الصاروخ
                 let startX = window.innerWidth * 0.15;
                 let startY = document.querySelector('.game-area').offsetHeight * 0.7; 
                 let currentX = startX + (animationTime * 25);
                 let currentY = startY - (Math.pow(animationTime, 1.5) * 3); 
                 
-                if(currentY < 50) currentY = 50;
-                if(currentX > window.innerWidth * 0.7) currentX = window.innerWidth * 0.7;
+                if(currentY < 50) currentY = 50; if(currentX > window.innerWidth * 0.7) currentX = window.innerWidth * 0.7;
 
+                // الصاروخ يتحرك بس كلاس الاهتزاز شغال وياه
                 rocket.style.transform = `translate(${currentX - startX}px, ${currentY - startY}px)`;
                 
                 let pathD = `M ${startX+30} ${startY+40} Q ${currentX} ${startY+20} ${currentX+30} ${currentY+60}`;
                 flightPath.setAttribute('d', pathD);
 
-                if (currentMultiplier >= crashPoint) {
-                    crashRocket();
-                }
+                if (currentMultiplier >= crashPoint) crashRocket();
             }, 40);
         }
 
         function crashRocket() {
-            clearInterval(gameInterval);
-            gameState = 'crashed';
-            multiText.style.color = 'var(--danger)';
-            statusText.innerText = "CRASHED AT";
+            clearInterval(gameInterval); gameState = 'crashed';
+            multiText.style.color = 'var(--danger)'; statusText.innerText = "CRASHED AT";
             rocketImg.src = 'https://cdn-icons-png.flaticon.com/512/1046/1046784.png'; // صورة الانفجار
+            rocketImg.classList.remove('flying-anim'); // إيقاف الاهتزاز
             
-            addToHistory(currentMultiplier.toFixed(2));
+            crashFakePlayers(); // تلوين اللاعبين اللي خسروا بالأحمر
 
-            if (betPlaced && !isCashedOut) {
-                actionBtn.innerText = "خسرت!";
-                actionBtn.className = "btn-main cancel";
-                betPlaced = false;
-            } else if (betPlaced && isCashedOut) {
-                betPlaced = false; 
-            }
+            if (myBetPlaced && !amICashedOut) {
+                actionBtn.innerText = "خسرت!"; actionBtn.className = "btn-main cancel"; myBetPlaced = false;
+                let myCard = document.getElementById('my_card');
+                if(myCard) { myCard.classList.add('crashed'); document.getElementById('my_profit').innerText = "خسارة"; }
+            } else if (myBetPlaced && amICashedOut) { myBetPlaced = false; }
 
             setTimeout(startRound, 3000);
         }
