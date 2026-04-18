@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>مساعد الشطرنج الأسطوري ♚ (النسخة النهائية)</title>
+    <title>مساعد الشطرنج للبطولات السريعة ⚡</title>
     <link rel="stylesheet" href="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css">
     <style>
         body { background-color: #0d0d12; color: #e0e0e0; font-family: 'Segoe UI', Tahoma, sans-serif; text-align: center; margin: 0; padding: 10px; }
-        h2 { color: #00ffcc; text-shadow: 0 0 10px #00ffcc; }
+        h2 { color: #00ffcc; text-shadow: 0 0 10px #00ffcc; margin-bottom: 10px;}
         
         #setup-screen {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -27,7 +27,7 @@
         .btn-redo { border-color: #0088ff; color: #0088ff; }
         .btn-redo:hover { background: #0088ff; color: #fff; box-shadow: 0 0 15px #0088ff; }
 
-        #status-display { margin-top: 10px; font-size: 1.1em; font-weight: bold; color: #00ffcc; min-height: 60px; padding: 10px; background: rgba(255, 255, 255, 0.05); border-radius: 10px; }
+        #status-display { margin-top: 5px; font-size: 1.1em; font-weight: bold; color: #00ffcc; min-height: 60px; padding: 10px; background: rgba(255, 255, 255, 0.05); border-radius: 10px; }
 
         .highlight-ai-from { background-color: rgba(255, 255, 0, 0.4) !important; }
         .highlight-ai-to { background-color: rgba(0, 255, 204, 0.5) !important; }
@@ -40,7 +40,7 @@
 
     <div id="setup-screen">
         <div class="setup-box">
-            <h2>⚙️ إعدادات البطولات</h2>
+            <h2>⚙️ إعدادات البليتز السريع</h2>
             <div class="option-group">
                 <span class="option-label">اختر فريقك:</span>
                 <select id="select-team">
@@ -49,20 +49,20 @@
                 </select>
             </div>
             <div class="option-group">
-                <span class="option-label">مستوى الصعوبة (الذكاء):</span>
+                <span class="option-label">سرعة التفكير (الوقت):</span>
                 <select id="select-diff">
-                    <option value="10">نوب = بوليت (لعب سريع - عمق 10) 🥉</option>
-                    <option value="15">احترافي = عثمان (متوازن - عمق 15) 🥈</option>
-                    <option value="20" selected>مُدمر ماغنوس = عمر (بطيء ومرعب - عمق 20) 💀</option>
+                    <option value="500">طلقة (نصف ثانية) ⚡</option>
+                    <option value="1000">سريع جداً (ثانية واحدة) ⏱️</option>
+                    <option value="2000" selected>مدمر سريع (ثانيتين كحد أقصى) 💀</option>
                 </select>
             </div>
-            <button class="btn" style="width: 100%; padding: 15px; font-size: 1.1em; border-color: #ff0055; color: #ff0055;" onclick="startGame()">ابدأ اللعبة الآن 🚀</button>
+            <button class="btn" style="width: 100%; padding: 15px; font-size: 1.1em; border-color: #ff0055; color: #ff0055;" onclick="startGame()">ابدأ اللعبة 🚀</button>
         </div>
     </div>
 
-    <h2>♟️ المساعد المدمر</h2>
+    <h2>♟️ المساعد الخاطف</h2>
     <div id="board-container"><div id="board"></div></div>
-    <div id="status-display">جاري تحميل المحرك الأسطوري... ⏳</div>
+    <div id="status-display">جاري تحميل المحرك السريع... ⏳</div>
 
     <div style="margin-top: 10px;">
         <button id="best-move-btn" class="btn" onclick="getBestMove()" style="display:none; border-color: #ff0055; color: #ff0055;">أوجد أفضل نقلة 💀</button>
@@ -81,17 +81,17 @@
         var redoStack = []; 
         var selectedSquare = null;
         var playerTeam = 'w';
-        var difficulty = 20;
+        var thinkTime = 2000; // وقت التفكير الافتراضي بالملي ثانية
         var engine = null;
         const pieceNames = { 'p': 'جندي', 'n': 'حصان', 'b': 'فيل', 'r': 'قلعة', 'q': 'وزير', 'k': 'ملك' };
 
-        // حل مشكلة الأمان (CORS) وسحب المحرك بطريقة مضمونة 100%
         fetch('https://cdnjs.cloudflare.com/ajax/libs/stockfish.js/10.0.2/stockfish.js')
             .then(response => response.text())
             .then(scriptText => {
                 var blob = new Blob([scriptText], { type: 'application/javascript' });
                 engine = new Worker(URL.createObjectURL(blob));
 
+                // ضبط إعدادات المحرك ليكون بأقصى مهارة ممكنة
                 engine.postMessage('uci');
                 engine.postMessage('setoption name Skill Level value 20');
                 engine.postMessage('setoption name Hash value 32');
@@ -117,8 +117,8 @@
                                 $(`.square-${moveObj.to}`).addClass('highlight-ai-to');
 
                                 let desc = moveObj.captured 
-                                    ? `💀 هجوم مدمر: الـ <b>${pieceNames[moveObj.piece]}</b> أكل في <b>${moveObj.to}</b>` 
-                                    : `✅ نقلة عبقرية: الـ <b>${pieceNames[moveObj.piece]}</b> إلى <b>${moveObj.to}</b>`;
+                                    ? `💀 هجوم خاطف: الـ <b>${pieceNames[moveObj.piece]}</b> أكل في <b>${moveObj.to}</b>` 
+                                    : `✅ نقلة سريعة: الـ <b>${pieceNames[moveObj.piece]}</b> إلى <b>${moveObj.to}</b>`;
                                 
                                 updateGameStatus(desc);
                             }
@@ -126,7 +126,7 @@
                     }
                 };
 
-                document.getElementById('status-display').innerText = "جاهز لبدء اللعبة!";
+                document.getElementById('status-display').innerText = "جاهز لبدء اللعبة الخاطفة!";
             })
             .catch(err => {
                 document.getElementById('status-display').innerText = "حدث خطأ في تحميل المحرك، يرجى تحديث الصفحة.";
@@ -137,7 +137,8 @@
 
         function startGame() {
             playerTeam = document.getElementById('select-team').value;
-            difficulty = parseInt(document.getElementById('select-diff').value);
+            // قراءة الوقت المحدد بالملي ثانية
+            thinkTime = parseInt(document.getElementById('select-diff').value);
             document.getElementById('setup-screen').style.display = 'none';
             board.orientation(playerTeam === 'b' ? 'black' : 'white');
             updateGameStatus();
@@ -152,7 +153,7 @@
             }
 
             let turnText = game.turn() === playerTeam ? 
-                "<span style='color:#00ffcc'>دورك الآن.. اضغط الزر للحركة</span>" : 
+                "<span style='color:#00ffcc'>دورك.. اضغط الزر بسرعة</span>" : 
                 "<span style='color:#ff0055'>بانتظار حركة الخصم... ⏳</span>";
             
             document.getElementById('status-display').innerHTML = (moveDesc ? moveDesc + "<br>" : "") + turnText;
@@ -203,21 +204,19 @@
             } else { selectedSquare = null; }
         });
 
+        // تم التغيير لنظام الـ movetime (الوقت المحدد) بدل الـ depth (العمق)
         function getBestMove() {
             if (!engine) {
                 alert("يرجى الانتظار، جاري إكمال تحميل المحرك...");
                 return;
             }
 
-            if (difficulty === 20) {
-                document.getElementById('status-display').innerText = "جاري التحليل بعمق 20! (قد يستغرق وقتاً حسب جهازك) 🧠💀";
-            } else {
-                document.getElementById('status-display').innerText = "جاري التحليل بقوة جهازك... 🧠⚡";
-            }
+            document.getElementById('status-display').innerText = "جاري التحليل الخاطف... ⚡⏱️";
             $('#best-move-btn').hide();
 
             engine.postMessage('position fen ' + game.fen());
-            engine.postMessage('go depth ' + difficulty);
+            // هاي التعليمة تجبر المحرك يرجع النقلة خلال الوقت المحدد بالضبط
+            engine.postMessage('go movetime ' + thinkTime);
         }
     </script>
 </body>
