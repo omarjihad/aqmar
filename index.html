@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>مساعد الشطرنج الأسطوري v2</title>
+    <title>مساعد الشطرنج - الإصدار الاحترافي</title>
     <link rel="stylesheet" href="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css">
     <style>
         body {
@@ -11,90 +11,85 @@
             color: #e0e0e0;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             text-align: center;
-            margin: 0;
-            padding: 10px;
+            margin: 0; padding: 10px;
         }
-        h2 { color: #00ffcc; text-shadow: 0 0 10px #00ffcc; margin-bottom: 15px; }
+        h2 { color: #00ffcc; text-shadow: 0 0 10px #00ffcc; }
         
-        #board-container {
-            width: 100%;
-            max-width: 380px;
-            margin: 0 auto 15px auto;
-            box-shadow: 0 0 25px rgba(0, 255, 204, 0.2);
-            border: 2px solid #00ffcc;
-            border-radius: 8px;
-            padding: 5px;
-            background-color: #1a1a24;
+        /* شاشة الإعدادات */
+        #setup-screen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: #0d0d12; z-index: 2000;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
         }
+        .setup-box { background: #1a1a24; padding: 25px; border-radius: 15px; border: 1px solid #00ffcc; width: 85%; max-width: 400px; }
+        .option-group { margin-bottom: 20px; }
+        .option-label { display: block; margin-bottom: 10px; color: #00ffcc; font-weight: bold; }
+        
+        select { background: #0d0d12; color: #fff; border: 1px solid #00ffcc; padding: 10px; border-radius: 5px; width: 100%; }
 
-        .white-1e1d7 { background-color: #dee3e6; }
-        .black-3c85d { background-color: #8a96a3; }
+        #board-container {
+            width: 100%; max-width: 380px; margin: 0 auto 15px auto;
+            box-shadow: 0 0 25px rgba(0, 255, 204, 0.2);
+            border: 2px solid #00ffcc; border-radius: 8px; padding: 5px; background-color: #1a1a24;
+        }
 
         .btn {
-            background-color: transparent;
-            color: #00ffcc;
-            border: 1px solid #00ffcc;
-            padding: 10px 15px;
-            margin: 5px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: bold;
-            transition: all 0.3s;
+            background: transparent; color: #00ffcc; border: 1px solid #00ffcc;
+            padding: 10px 12px; margin: 3px; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.3s;
         }
-        .btn:hover { background-color: #00ffcc; color: #0d0d12; box-shadow: 0 0 15px #00ffcc; }
-        
-        .btn-undo { border-color: #ffcc00; color: #ffcc00; }
-        .btn-undo:hover { background-color: #ffcc00; color: #000; box-shadow: 0 0 15px #ffcc00; }
+        .btn:hover { background: #00ffcc; color: #0d0d12; box-shadow: 0 0 15px #00ffcc; }
+        .btn-redo { border-color: #0088ff; color: #0088ff; }
+        .btn-redo:hover { background: #0088ff; color: #fff; box-shadow: 0 0 15px #0088ff; }
 
         #status-display {
-            margin-top: 15px;
-            font-size: 1.1em;
-            font-weight: bold;
-            color: #00ffcc;
-            min-height: 50px;
-            padding: 10px;
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 10px;
+            margin-top: 10px; font-size: 1em; font-weight: bold; color: #00ffcc;
+            min-height: 60px; padding: 10px; background: rgba(255, 255, 255, 0.05); border-radius: 10px;
         }
 
-        /* تمييز المربعات عند الحركة */
+        /* تمييز الحركات */
+        .highlight-ai-from { background-color: rgba(255, 255, 0, 0.4) !important; }
+        .highlight-ai-to { background-color: rgba(0, 255, 204, 0.5) !important; }
+        .highlight-selected { background-color: rgba(0, 255, 204, 0.4) !important; }
         .highlight-move { position: relative; }
         .highlight-move::after {
             content: ''; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            width: 30%; height: 30%; background-color: rgba(0, 255, 204, 0.6); border-radius: 50%;
+            width: 25%; height: 25%; background: rgba(0, 255, 204, 0.6); border-radius: 50%;
         }
-        .highlight-ai-from { background-color: rgba(255, 255, 0, 0.4) !important; } /* أصفر لمكان الانطلاق */
-        .highlight-ai-to { background-color: rgba(0, 255, 204, 0.5) !important; }  /* نيون لمكان الاستقرار */
-        .highlight-selected { background-color: rgba(0, 255, 204, 0.4) !important; }
-
-        #team-selector {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background-color: rgba(13, 13, 18, 0.98); z-index: 1000;
-            display: flex; flex-direction: column; justify-content: center; align-items: center;
-        }
-        .team-btn { font-size: 1.4em; padding: 15px 30px; margin: 10px; border-radius: 12px; cursor: pointer; border: 2px solid #00ffcc; font-weight: bold; }
-        .team-white { background-color: #fff; color: #000; }
-        .team-black { background-color: #222; color: #fff; border-color: #ff0055; }
     </style>
 </head>
 <body>
 
-    <div id="team-selector">
-        <h2>اختر فريقك ⚔️</h2>
-        <button class="team-btn team-white" onclick="setTeam('w')">العب بالأبيض ⚪</button>
-        <button class="team-btn team-black" onclick="setTeam('b')">العب بالأسود ⚫</button>
+    <div id="setup-screen">
+        <div class="setup-box">
+            <h2>⚙️ إعدادات اللعبة</h2>
+            <div class="option-group">
+                <span class="option-label">اختر فريقك:</span>
+                <select id="select-team">
+                    <option value="w">الأبيض (White) ⚪</option>
+                    <option value="b">الأسود (Black) ⚫</option>
+                </select>
+            </div>
+            <div class="option-group">
+                <span class="option-label">مستوى الصعوبة (الذكاء):</span>
+                <select id="select-diff">
+                    <option value="4">جيد (مبتدئ) 🥉</option>
+                    <option value="9">متوسط (لاعب محترف) 🥈</option>
+                    <option value="16">عالمي (Grandmaster) 🥇</option>
+                </select>
+            </div>
+            <button class="btn" style="width: 100%; padding: 15px;" onclick="startGame()">ابدأ اللعبة الآن 🚀</button>
+        </div>
     </div>
 
-    <h2>♟️ المساعد الذكي</h2>
-    
+    <h2>♟️ مساعد الشطرنج الأسطوري</h2>
     <div id="board-container"><div id="board"></div></div>
-    
-    <div id="status-display">حدد فريقك للبدء...</div>
+    <div id="status-display">انتظار بدء اللعبة...</div>
 
     <div style="margin-top: 10px;">
         <button id="best-move-btn" class="btn" onclick="getBestMove()">أوجد أفضل نقلة 🧠</button>
-        <button class="btn btn-undo" onclick="undoMove()">تراجع خطوة ↩️</button>
-        <button class="btn" onclick="resetGame()">إعادة ♻️</button>
+        <button class="btn" onclick="undoMove()">↩️ رجوع</button>
+        <button class="btn btn-redo" onclick="redoMove()">تقديم ↪️</button>
+        <button class="btn" onclick="confirmReset()">إعادة ♻️</button>
     </div>
 
     <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
@@ -104,10 +99,11 @@
     <script>
         var board = null;
         var game = new Chess();
+        var redoStack = []; // مخزن لحفظ الحركات اللي تراجعنا عنها
         var selectedSquare = null;
         var playerTeam = 'w';
+        var difficulty = 9;
 
-        // ترجمة القطع للعربية
         const pieceNames = { 'p': 'جندي', 'n': 'حصان', 'b': 'فيل', 'r': 'قلعة', 'q': 'وزير', 'k': 'ملك' };
 
         var config = {
@@ -117,16 +113,20 @@
         };
         board = Chessboard('board', config);
 
-        function setTeam(color) {
-            playerTeam = color;
-            document.getElementById('team-selector').style.display = 'none';
-            board.orientation(color === 'b' ? 'black' : 'white');
+        function startGame() {
+            playerTeam = document.getElementById('select-team').value;
+            difficulty = document.getElementById('select-diff').value;
+            document.getElementById('setup-screen').style.display = 'none';
+            board.orientation(playerTeam === 'b' ? 'black' : 'white');
             updateGameStatus();
         }
 
         function updateGameStatus(moveDesc = "") {
             if (game.game_over()) {
-                document.getElementById('status-display').innerHTML = "انتهت اللعبة! 🏁";
+                let msg = "انتهت اللعبة! ";
+                if (game.in_checkmate()) msg += "كش ملك! 🏆";
+                else if (game.in_draw()) msg += "تعادل! 🤝";
+                document.getElementById('status-display').innerHTML = msg;
                 $('#best-move-btn').hide();
                 return;
             }
@@ -145,15 +145,46 @@
             $('#board .square-55d63').removeClass('highlight-ai-from highlight-ai-to highlight-selected highlight-move');
         }
 
-        // حركة التراجع (تتراجع خطوة واحدة في كل ضغطة)
         function undoMove() {
-            game.undo();
-            board.position(game.fen());
-            removeHighlights();
-            updateGameStatus("تم التراجع عن الخطوة الأخيرة ↩️");
+            let move = game.undo();
+            if (move) {
+                redoStack.push(move); // حفظ الحركة المحذوفة للتقديم
+                board.position(game.fen());
+                removeHighlights();
+                updateGameStatus("تم الرجوع للخلف ↩️");
+            }
         }
 
-        // التعامل مع الضغط اليدوي (حركة الخصم)
+        function redoMove() {
+            let move = redoStack.pop();
+            if (move) {
+                game.move(move);
+                board.position(game.fen());
+                removeHighlights();
+                updateGameStatus("تم التقديم للأمام ↪️");
+            }
+        }
+
+        function confirmReset() {
+            // إذا كانت اللعبة في بدايتها لا داعي للسؤال
+            if (game.history().length === 0) {
+                resetGame();
+                return;
+            }
+            if (confirm("اللعبه مستمرة، هل أنت متأكد من إعادة اللعبة؟")) {
+                resetGame();
+            }
+        }
+
+        function resetGame() {
+            game.reset();
+            redoStack = [];
+            board.start();
+            removeHighlights();
+            document.getElementById('setup-screen').style.display = 'flex';
+        }
+
+        // التعامل مع الضغط اليدوي
         $('#board').on('click', '.square-55d63', function() {
             var square = $(this).attr('data-square');
             var piece = game.get(square);
@@ -161,6 +192,7 @@
             if (selectedSquare) {
                 var move = game.move({ from: selectedSquare, to: square, promotion: 'q' });
                 if (move) {
+                    redoStack = []; // عند لعب حركة جديدة يدوياً نمسح الـ Redo
                     board.position(game.fen());
                     removeHighlights();
                     selectedSquare = null;
@@ -179,13 +211,12 @@
             } else { selectedSquare = null; }
         });
 
-        // تشغيل الذكاء الاصطناعي
         function getBestMove() {
             var fen = game.fen();
-            document.getElementById('status-display').innerText = "جاري التحليل الأسطوري... 🧠";
+            document.getElementById('status-display').innerText = "جاري التفكير بالمستوى المطلوب... 🧠";
             $('#best-move-btn').hide();
 
-            fetch(`https://stockfish.online/api/s/v2.php?fen=${fen}&depth=15`)
+            fetch(`https://stockfish.online/api/s/v2.php?fen=${fen}&depth=${difficulty}`)
                 .then(response => response.json())
                 .then(data => {
                     if(data.success) {
@@ -194,24 +225,18 @@
                         let toSq = bestMoveStr.substring(2, 4);
                         
                         let pieceMoved = game.get(fromSq);
-                        let move = game.move({ from: fromSq, to: toSq, promotion: 'q' });
+                        game.move({ from: fromSq, to: toSq, promotion: 'q' });
+                        redoStack = [];
 
                         board.position(game.fen());
                         removeHighlights();
-                        
-                        // رسم "الأسهم" عن طريق تلوين المربعات
                         $(`.square-${fromSq}`).addClass('highlight-ai-from');
                         $(`.square-${toSq}`).addClass('highlight-ai-to');
 
-                        let desc = `✅ نقلة ذكية: حركت الـ <b>${pieceNames[pieceMoved.type]}</b> من <b>${fromSq}</b> إلى <b>${toSq}</b>`;
+                        let desc = `✅ نقلة ${difficulty > 10 ? 'عالمية' : 'ذكية'}: الـ <b>${pieceNames[pieceMoved.type]}</b> إلى <b>${toSq}</b>`;
                         updateGameStatus(desc);
                     }
                 });
-        }
-
-        function resetGame() {
-            game.reset(); board.start(); removeHighlights();
-            document.getElementById('team-selector').style.display = 'flex';
         }
     </script>
 </body>
