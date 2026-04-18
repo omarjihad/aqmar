@@ -1,343 +1,302 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Epic Crash - Perfect Clone 🚀</title>
+    <title>NFT Battle - Perfect Clone</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@500;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@600;800;900&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-main: #0b0e14;
-            --grid-color: rgba(255, 255, 255, 0.04);
-            --primary-btn: #0066ff;
-            --danger: #ff3b30;
-            --success: #00c851;
+            --bg-main: #0f0f13;
+            --bg-card: #1c1c24;
+            --ton-blue: #0098ea;
             --text-main: #ffffff;
-            --text-muted: #6b7280;
-            --panel-bg: #121620;
+            --text-muted: #8e8e93;
         }
 
-        * { box-sizing: border-box; font-family: 'Roboto', sans-serif; margin: 0; padding: 0; user-select: none; -webkit-tap-highlight-color: transparent; }
-        body { background-color: var(--bg-main); color: var(--text-main); overflow: hidden; display: flex; flex-direction: column; height: 100vh; }
+        * { box-sizing: border-box; font-family: 'Cairo', sans-serif; margin: 0; padding: 0; user-select: none; -webkit-tap-highlight-color: transparent; }
+        body { background-color: var(--bg-main); color: var(--text-main); overflow-x: hidden; padding-bottom: 80px; }
 
-        /* ========= الهيدر العلوي ========= */
-        .header { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; z-index: 10; border-bottom: 1px solid rgba(255,255,255,0.05); background: var(--bg-main); }
-        .balance-badge { background: rgba(0, 102, 255, 0.1); padding: 6px 12px; border-radius: 8px; font-weight: 900; font-size: 16px; border: 1px solid rgba(0, 102, 255, 0.3); color: white; display: flex; align-items: center; gap: 5px; }
-        .online-badge { display: flex; align-items: center; gap: 6px; font-size: 14px; font-weight: bold; color: var(--success); }
-        .dot { width: 8px; height: 8px; background: var(--success); border-radius: 50%; box-shadow: 0 0 8px var(--success); animation: blink 1.5s infinite; }
-        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
-
-        /* ========= منطقة اللعبة والشبكة ========= */
-        .game-area { 
-            flex: 1; position: relative; overflow: hidden; 
-            display: flex; justify-content: center; align-items: center; flex-direction: column;
-            background-image: 
-                linear-gradient(var(--grid-color) 1px, transparent 1px),
-                linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
-            background-size: 40px 40px;
+        /* الهيدر العلوي */
+        .header {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 15px 20px; background: var(--bg-main); position: sticky; top: 0; z-index: 100;
         }
-        
-        .status-text { font-size: 13px; color: var(--text-muted); font-weight: 700; margin-bottom: 5px; z-index: 2; text-transform: uppercase; letter-spacing: 1px; }
-        .multiplier { font-size: 90px; font-weight: 900; z-index: 2; letter-spacing: -3px; text-shadow: 0 0 30px rgba(255,255,255,0.05); }
+        .user-info { display: flex; align-items: center; gap: 10px; }
+        .avatar { width: 38px; height: 38px; border-radius: 50%; background: #333; overflow: hidden; border: 2px solid #2a2a35; }
+        .avatar img { width: 100%; height: 100%; object-fit: cover; }
+        .balance-info { display: flex; flex-direction: column; }
+        .balance-title { font-size: 11px; color: var(--text-muted); }
+        .balance-amount { font-size: 16px; font-weight: 900; color: #00e6ff; display: flex; align-items: center; gap: 4px; }
+        .btn-deposit { background: #4a4a5a; color: white; border: none; padding: 8px 16px; border-radius: 10px; font-weight: bold; font-size: 13px; }
 
-        /* الصاروخ الفخم والمسار */
-        .rocket-container { position: absolute; bottom: 20%; left: 20%; z-index: 5; display: none; }
-        .rocket-img { width: 110px; filter: drop-shadow(0 10px 15px rgba(0,0,0,0.6)); transform: rotate(45deg); }
-        .flying-shake { animation: shake 0.1s infinite alternate; }
-        @keyframes shake { 0% { transform: translate(0, 0) rotate(45deg); } 100% { transform: translate(-2px, 2px) rotate(45deg); } }
-        
-        .trail-svg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none; }
-        .trail-path { fill: none; stroke: var(--danger); stroke-width: 6; stroke-linecap: round; filter: drop-shadow(0 0 10px rgba(255, 59, 48, 0.8)); }
+        .container { padding: 0 15px; }
 
-        /* ========= لوحة التحكم والرهان ========= */
-        .controls { background: var(--panel-bg); padding: 20px; display: flex; flex-direction: column; border-top: 1px solid rgba(255,255,255,0.05); flex-shrink: 0; }
-        
-        .input-wrapper { background: #0b0e14; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; margin-bottom: 15px; border: 1px solid rgba(255,255,255,0.05); }
-        .input-wrapper input { background: transparent; border: none; color: white; font-size: 20px; font-weight: bold; outline: none; width: 100%; text-align: right; }
-        
-        .btn-bet { width: 100%; padding: 18px; border-radius: 12px; font-size: 22px; font-weight: 900; color: white; border: none; background: var(--primary-btn); cursor: pointer; transition: 0.1s; }
-        .btn-bet:active { transform: scale(0.98); }
-        .btn-bet.cancel { background: var(--danger); }
-        .btn-bet.cashout { background: var(--success); color: black; }
+        /* نظام الصفحات */
+        .page { display: none; animation: fadeIn 0.2s ease; }
+        .page.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-        /* ========= قائمة اللاعبين ========= */
-        .players-list { margin-top: 15px; max-height: 150px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
-        .players-list::-webkit-scrollbar { display: none; }
-        .player-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; background: rgba(255,255,255,0.02); border-radius: 10px; border: 1px solid rgba(255,255,255,0.03); }
-        .player-info { display: flex; align-items: center; gap: 10px; }
-        .p-avatar { width: 32px; height: 32px; border-radius: 50%; background: #333; }
-        .p-details { display: flex; flex-direction: column; }
-        .p-name { font-size: 14px; font-weight: bold; }
-        .p-bet { font-size: 12px; color: var(--text-muted); }
-        .p-profit { font-weight: 900; font-size: 15px; }
-        
-        .player-row.cashed { background: rgba(0, 200, 81, 0.1); border-color: rgba(0, 200, 81, 0.2); }
-        .player-row.cashed .p-profit { color: var(--success); }
-        .player-row.crashed { opacity: 0.4; }
-        .player-row.crashed .p-profit { color: var(--danger); }
+        /* --- صفحة LIVE (الرئيسية) --- */
+        /* شريط الـ Daily Box */
+        .daily-box-section { background: #1a1a1a; border-radius: 16px; padding: 15px; margin-bottom: 20px; border: 1px solid #333; }
+        .daily-header { display: flex; justify-content: space-between; margin-bottom: 15px; align-items: center; }
+        .badge-hot { background: #ff4444; color: white; padding: 2px 8px; border-radius: 6px; font-size: 11px; font-weight: 900; }
+        .daily-items { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 5px; }
+        .daily-items::-webkit-scrollbar { display: none; }
+        .d-item { width: 50px; height: 50px; border-radius: 12px; flex-shrink: 0; display: flex; justify-content: center; align-items: center; font-size: 24px; }
+        .timer-btn { width: 100%; background: #2a2a35; color: var(--text-muted); border: none; padding: 12px; border-radius: 10px; margin-top: 15px; font-weight: bold; font-family: monospace; font-size: 16px; }
 
-        /* ========= قائمة المطور (Dev Panel) ========= */
-        .dev-btn { position: absolute; top: 15px; left: 15px; background: transparent; border: none; font-size: 20px; cursor: pointer; z-index: 1000; opacity: 0.5; }
-        .dev-panel { position: absolute; top: 50px; left: 15px; background: #222; border: 1px solid #444; border-radius: 10px; padding: 15px; z-index: 1000; display: none; box-shadow: 0 10px 30px rgba(0,0,0,0.8); }
-        .dev-panel input { width: 100%; padding: 8px; margin-bottom: 10px; background: #111; border: 1px solid #333; color: white; border-radius: 5px; }
-        .dev-panel button { width: 100%; padding: 8px; background: var(--success); border: none; font-weight: bold; border-radius: 5px; cursor: pointer; margin-bottom: 5px; }
+        /* أزرار ROCKET و PVP */
+        .banners-scroll { display: flex; gap: 10px; overflow-x: auto; margin-bottom: 15px; }
+        .banners-scroll::-webkit-scrollbar { display: none; }
+        .banner-card { min-width: 140px; border-radius: 16px; padding: 15px; position: relative; overflow: hidden; flex: 1; cursor: pointer; }
+        .banner-rocket { background: linear-gradient(135deg, #2b5876, #4e4376); border: 1px solid #4e4376; }
+        .banner-pvp { background: linear-gradient(135deg, #ff9900, #ff5500); border: 1px solid #ff9900; }
+        .b-title { font-size: 18px; font-weight: 900; font-style: italic; margin-top: 5px; }
+        
+        .half-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+        .half-btn { background: #3a0ca3; border-radius: 12px; padding: 15px; display: flex; justify-content: space-between; font-weight: bold; color: white; }
+        .half-btn.green { background: #11998e; }
+
+        /* شبكة الصناديق */
+        .cases-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .case-card { background: var(--bg-card); border-radius: 16px; padding: 15px; text-align: center; border: 1px solid rgba(255,255,255,0.05); position: relative; overflow: hidden; display: flex; flex-direction: column; justify-content: space-between; min-height: 160px; }
+        .case-title { font-size: 20px; font-weight: 900; margin-bottom: 5px; text-transform: uppercase; }
+        .case-img { height: 70px; object-fit: contain; margin: 10px 0; filter: drop-shadow(0 5px 15px rgba(0,0,0,0.5)); }
+        .case-btn { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: white; padding: 6px; border-radius: 8px; font-size: 12px; width: 100%; font-weight: bold; }
+
+        /* --- صفحة ROCKET --- */
+        .rocket-page { height: calc(100vh - 70px); display: flex; flex-direction: column; background: #0a0a0f; }
+        .game-area { flex: 1; position: relative; display: flex; justify-content: center; align-items: center; overflow: hidden; border-bottom: 2px solid #222; }
+        .multiplier { font-size: 70px; font-weight: 900; z-index: 2; color: white; }
+        .rocket-obj { position: absolute; bottom: 20px; left: 20px; width: 60px; transform: rotate(45deg); z-index: 3; transition: all 0.1s linear; }
+        .rocket-path { position: absolute; bottom: 45px; left: 40px; width: 0; height: 4px; background: #ff4444; box-shadow: 0 0 10px #ff4444; z-index: 2; transform-origin: left; transform: rotate(-20deg); border-radius: 2px; }
+
+        .controls-area { padding: 15px; background: var(--bg-main); }
+        .history-bar { display: flex; gap: 8px; overflow-x: auto; margin-bottom: 15px; padding-bottom: 5px; }
+        .history-bar::-webkit-scrollbar { display: none; }
+        .h-item { padding: 4px 10px; border-radius: 8px; font-size: 12px; font-weight: bold; background: #2a2a35; color: white; }
+        .h-item.green { color: #00C851; background: rgba(0, 200, 81, 0.1); }
+        .h-item.red { color: #ff4444; background: rgba(255, 68, 68, 0.1); }
+
+        .input-row { display: flex; background: #1c1c24; border-radius: 12px; margin-bottom: 15px; padding: 5px; align-items: center; border: 1px solid #333; }
+        .input-row button { background: transparent; border: none; color: white; font-size: 20px; width: 40px; height: 40px; }
+        .input-row input { flex: 1; background: transparent; border: none; color: white; text-align: center; font-size: 16px; font-weight: bold; outline: none; }
+
+        .btn-place-bet { background: #2575fc; color: white; border: none; width: 100%; padding: 16px; border-radius: 12px; font-size: 18px; font-weight: 900; font-family: 'Cairo'; cursor: pointer; }
+
+        /* الناف بار السفلي */
+        .navbar {
+            position: fixed; bottom: 0; width: 100%; background: #15151a;
+            border-top: 1px solid #222; display: flex; justify-content: space-around; padding: 10px 0 20px 0; z-index: 100;
+        }
+        .nav-item { color: var(--text-muted); font-size: 11px; font-weight: bold; text-align: center; opacity: 0.5; transition: 0.2s; cursor: pointer; }
+        .nav-item.active { color: white; opacity: 1; }
+        .nav-icon { font-size: 22px; display: block; margin-bottom: 2px; }
 
     </style>
 </head>
 <body>
 
-    <button class="dev-btn" onclick="toggleDevPanel()">⚙️</button>
-    <div class="dev-panel" id="dev-panel">
-        <h4 style="margin-bottom: 10px; color: gold;">👨‍💻 Dev Panel</h4>
-        <button onclick="addDevBalance()">إضافة 1000 💎</button>
-        <input type="number" id="force-crash" placeholder="أجبر الكراش (مثال: 5.00)">
-        <button onclick="clearData()" style="background: var(--danger); color: white;">تصفير البيانات</button>
-    </div>
-
-    <div class="header">
-        <div class="balance-badge"><span id="balance">100.00</span> 💎</div>
-        <div class="online-badge">online <span id="online-count">142</span> <div class="dot"></div></div>
-    </div>
-
-    <div class="game-area" id="game-area">
-        <svg class="trail-svg"><path id="flight-path" class="trail-path" d="" /></svg>
-        
-        <div class="status-text" id="status-text">NEXT ROUND IN</div>
-        <div class="multiplier" id="multi-text">5</div>
-        
-        <div class="rocket-container" id="rocket">
-            <img src="https://cdn-icons-png.flaticon.com/512/1356/1356479.png" class="rocket-img" id="rocket-img">
-        </div>
-    </div>
-
-    <div class="controls">
-        <div class="input-wrapper">
-            <input type="number" id="bet-input" value="1.00" step="0.5" min="0.5">
-            <span style="color:var(--text-main); font-weight:bold;">💎</span>
-        </div>
-
-        <button class="btn-bet" id="action-btn" onclick="handleAction()">Place bet</button>
-
-        <div class="players-list" id="players-list">
+    <div class="header" id="main-header">
+        <div class="user-info">
+            <div class="avatar"><img src="https://via.placeholder.com/40" id="user-img"></div>
+            <div class="balance-info">
+                <span class="balance-title">Your balance</span>
+                <span class="balance-amount"><span style="font-size: 12px;">💎</span> 0.241</span>
             </div>
+        </div>
+        <button class="btn-deposit">Deposit</button>
+    </div>
+
+    <div id="page-live" class="page active">
+        <div class="container">
+            
+            <div class="daily-box-section">
+                <div class="daily-header">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <span class="badge-hot">HOT</span>
+                        <span style="font-weight: bold;">Daily Box</span>
+                    </div>
+                </div>
+                <div class="daily-items">
+                    <div class="d-item" style="background: #e74c3c;">❤️</div>
+                    <div class="d-item" style="background: #3498db;">💎</div>
+                    <div class="d-item" style="background: #9b59b6;">🚀</div>
+                    <div class="d-item" style="background: #f1c40f;">🎁</div>
+                    <div class="d-item" style="background: #2ecc71;">👾</div>
+                </div>
+                <button class="timer-btn">⏱ 23h 36m 10s</button>
+            </div>
+
+            <div class="banners-scroll">
+                <div class="banner-card banner-rocket" onclick="switchPage('page-rocket', document.querySelectorAll('.nav-item')[1])">
+                    <span class="badge-hot" style="background: white; color: black;">HOT!</span>
+                    <div class="b-title">🚀 ROCKET</div>
+                </div>
+                <div class="banner-card banner-pvp">
+                    <span class="badge-hot" style="background: #ffcc00; color: black;">NEW!</span>
+                    <div class="b-title">⚔️ PVP</div>
+                </div>
+            </div>
+
+            <div class="half-grid">
+                <div class="half-btn"><span>📄 CONTRACTS</span> <span>›</span></div>
+                <div class="half-btn green"><span>⬆️ UPGRADE</span> <span>›</span></div>
+            </div>
+
+            <div class="cases-grid">
+                <div class="case-card" style="background: linear-gradient(180deg, #3a2a1a, var(--bg-card)); border-color: #ffd700;">
+                    <div class="case-title" style="color: #ffd700;">FREE24</div>
+                    <img src="https://cdn-icons-png.flaticon.com/512/836/836048.png" class="case-img">
+                    <button class="case-btn" style="border-color: #ffd700; color: #ffd700;">📅 FREE</button>
+                </div>
+                
+                <div class="case-card" style="background: linear-gradient(180deg, #1a2a3a, var(--bg-card)); border-color: #00e6ff;">
+                    <div class="case-title" style="color: #00e6ff;">FREE</div>
+                    <img src="https://cdn-icons-png.flaticon.com/512/7185/7185711.png" class="case-img">
+                    <button class="case-btn" style="background: #8a2be2; border: none;">🎁 FREE</button>
+                </div>
+
+                <div class="case-card">
+                    <div class="case-title" style="color: #00C851;">FARM</div>
+                    <img src="https://cdn-icons-png.flaticon.com/512/2821/2821878.png" class="case-img">
+                    <button class="case-btn">0.1 💎</button>
+                </div>
+
+                <div class="case-card" style="background: linear-gradient(180deg, #3a1a2a, var(--bg-card));">
+                    <div class="badge-hot" style="background: #ff44aa; color: white; position: absolute; top: 10px; right: 10px;">LIMITED</div>
+                    <div class="case-title" style="color: #ffaaee; margin-top: 15px;">SPRING</div>
+                    <img src="https://cdn-icons-png.flaticon.com/512/1043/1043446.png" class="case-img">
+                    <button class="case-btn">5 💎</button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <div id="page-rocket" class="page">
+        <div class="rocket-page">
+            <div class="game-area">
+                <div style="position: absolute; top: 20px; left: 20px; display: flex; align-items: center; gap: 5px;">
+                    <div style="width: 8px; height: 8px; background: #00C851; border-radius: 50%;"></div>
+                    <span style="font-size: 12px; color: #00C851;">online</span>
+                </div>
+                <div style="position: absolute; top: 20px; right: 20px; background: rgba(255,255,255,0.1); padding: 5px 10px; border-radius: 10px; font-weight: bold;">💎 0.24</div>
+                
+                <div class="multiplier" id="multi-text">1.00x</div>
+                <div class="rocket-path" id="rocket-path"></div>
+                <img src="https://cdn-icons-png.flaticon.com/512/3256/3256114.png" class="rocket-obj" id="rocket-img">
+            </div>
+
+            <div class="controls-area">
+                <div class="history-bar">
+                    <div class="h-item">1.00x</div>
+                    <div class="h-item green">1.92x</div>
+                    <div class="h-item green">1.53x</div>
+                    <div class="h-item red">4.55x</div>
+                    <div class="h-item green">2.58x</div>
+                </div>
+
+                <div class="input-row">
+                    <button onclick="adjustBet(-0.1)">-</button>
+                    <input type="number" id="bet-amt" value="0.20" step="0.1">
+                    <button onclick="adjustBet(0.1)">+</button>
+                </div>
+
+                <button class="btn-place-bet" id="btn-bet" onclick="playRocket()">Place bet</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="navbar">
+        <div class="nav-item active" onclick="switchPage('page-live', this)"><span class="nav-icon">🎮</span> Live</div>
+        <div class="nav-item" onclick="switchPage('page-rocket', this)"><span class="nav-icon">🚀</span> Rocket</div>
+        <div class="nav-item"><span class="nav-icon">⚔️</span> PVP</div>
+        <div class="nav-item"><span class="nav-icon">👤</span> Profile</div>
     </div>
 
     <script>
-        // إعدادات تليجرام
-        try { window.Telegram.WebApp.expand(); } catch(e) {}
-
-        // ================= نظام الحفظ (الرصيد) =================
-        let balance = parseFloat(localStorage.getItem('epic_real_balance'));
-        if (isNaN(balance)) balance = 100.00; 
-        
-        function updateBalance(amount) {
-            balance += amount;
-            document.getElementById('balance').innerText = balance.toFixed(2);
-            localStorage.setItem('epic_real_balance', balance); 
-        }
-        updateBalance(0);
-
-        // ================= لوحة المطور =================
-        function toggleDevPanel() {
-            let panel = document.getElementById('dev-panel');
-            panel.style.display = panel.style.display === 'block' ? 'none' : 'block';
-        }
-        function addDevBalance() { updateBalance(1000); alert("تمت إضافة 1000 💎"); }
-        function clearData() { localStorage.removeItem('epic_real_balance'); location.reload(); }
-
-        // ================= محرك اللعبة الواقعي =================
-        let gameState = 'waiting'; 
-        let crashPoint = 1.00;
-        let startTime = 0;
-        const GROWTH_RATE = 0.00006; 
-
-        let betPlaced = false;
-        let isCashedOut = false;
-        let betAmount = 0;
-        let queuedBet = 0;
-
-        const multiText = document.getElementById('multi-text');
-        const statusText = document.getElementById('status-text');
-        const rocket = document.getElementById('rocket');
-        const rocketImg = document.getElementById('rocket-img');
-        const flightPath = document.getElementById('flight-path');
-        const actionBtn = document.getElementById('action-btn');
-        const playersList = document.getElementById('players-list');
-
-        function generateCrashPoint() {
-            // التحقق من لوحة المطور أولاً
-            let forceVal = document.getElementById('force-crash').value;
-            if(forceVal && parseFloat(forceVal) > 1.0) {
-                document.getElementById('force-crash').value = ''; // تصفير الحقل بعد الاستخدام
-                return parseFloat(forceVal);
-            }
-            // خوارزمية طبيعية
-            if (Math.random() < 0.05) return 1.00;
-            return Math.max(1.01, (0.99 / Math.random()));
-        }
-
-        function gameLoop() {
-            let now = Date.now();
-
-            if (gameState === 'waiting') {
-                let timeLeft = Math.ceil((startTime - now) / 1000);
-                if (timeLeft <= 0) {
-                    gameState = 'flying';
-                    statusText.innerText = "CURRENT PAYOUT";
-                    rocket.style.display = 'block';
-                    rocketImg.src = "https://cdn-icons-png.flaticon.com/512/1356/1356479.png";
-                    rocketImg.classList.add('flying-shake'); // تشغيل الاهتزاز
-                    
-                    if (betPlaced && !isCashedOut) {
-                        actionBtn.innerText = "Cashout"; actionBtn.className = "btn-bet cashout";
-                    } else if (!betPlaced && queuedBet === 0) {
-                        actionBtn.innerText = "Place bet"; actionBtn.className = "btn-bet";
-                    }
-                } else {
-                    multiText.innerText = timeLeft;
-                }
-            } 
-            else if (gameState === 'flying') {
-                let elapsedMs = now - startTime;
-                let currentMulti = Math.exp(GROWTH_RATE * elapsedMs);
-
-                if (currentMulti >= crashPoint) {
-                    gameState = 'crashed';
-                    multiText.innerText = crashPoint.toFixed(2) + "x";
-                    multiText.style.color = 'var(--danger)';
-                    statusText.innerText = "CRASHED AT";
-                    rocketImg.src = "https://cdn-icons-png.flaticon.com/512/1046/1046784.png"; // صورة الانفجار
-                    rocketImg.classList.remove('flying-shake');
-                    
-                    if (betPlaced && !isCashedOut) {
-                        actionBtn.innerText = "Place bet"; actionBtn.className = "btn-bet";
-                        betPlaced = false;
-                        let myRow = document.getElementById('my_row');
-                        if(myRow) { myRow.classList.add('crashed'); document.getElementById('my_profit').innerText = `-${betAmount.toFixed(2)}`; }
-                    }
-
-                    setTimeout(startNewRound, 3000);
-                } else {
-                    multiText.innerText = currentMulti.toFixed(2) + "x";
-                    
-                    if (betPlaced && !isCashedOut) {
-                        document.getElementById('my_profit').innerText = (betAmount * currentMulti).toFixed(2) + " 💎";
-                    }
-
-                    // حركة الصاروخ والخط الأحمر المطابقة لـ Epic
-                    let startX = window.innerWidth * 0.15;
-                    let startY = document.getElementById('game-area').offsetHeight * 0.8;
-                    let progress = elapsedMs / 1000; 
-                    
-                    let currentX = startX + (progress * 40);
-                    let currentY = startY - (Math.pow(progress, 1.5) * 12);
-                    
-                    if(currentY < 40) currentY = 40; 
-                    if(currentX > window.innerWidth * 0.75) currentX = window.innerWidth * 0.75;
-
-                    rocket.style.transform = `translate(${currentX - startX}px, ${currentY - startY}px)`;
-                    flightPath.setAttribute('d', `M ${startX+20} ${startY+10} Q ${currentX} ${startY+20} ${currentX+30} ${currentY+40}`);
-                }
-            }
-
-            if(gameState !== 'crashed') {
-                requestAnimationFrame(gameLoop);
-            }
-        }
-
-        function startNewRound() {
-            gameState = 'waiting';
-            crashPoint = generateCrashPoint();
-            startTime = Date.now() + 5000; 
+        // التبديل بين الصفحات وإخفاء الهيدر بالصاروخ
+        function switchPage(pageId, element) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+            document.getElementById(pageId).classList.add('active');
+            element.classList.add('active');
             
-            rocket.style.display = 'none';
-            flightPath.setAttribute('d', '');
-            multiText.style.color = '#fff';
-            statusText.innerText = "NEXT ROUND IN";
-
-            playersList.innerHTML = ''; 
-
-            if (queuedBet > 0) {
-                betPlaced = true; betAmount = queuedBet; queuedBet = 0; isCashedOut = false;
-                actionBtn.innerText = "Cancel"; actionBtn.className = "btn-bet cancel";
-                addMyRow(betAmount);
-            } else if (!betPlaced) {
-                actionBtn.innerText = "Place bet"; actionBtn.className = "btn-bet";
+            if(pageId === 'page-rocket') {
+                document.getElementById('main-header').style.display = 'none';
+            } else {
+                document.getElementById('main-header').style.display = 'flex';
             }
-
-            requestAnimationFrame(gameLoop);
         }
 
-        function addMyRow(amount) {
-            playersList.innerHTML = `
-                <div class="player-row" id="my_row" style="border-color: var(--primary-btn);">
-                    <div class="player-info">
-                        <div class="p-avatar" style="background: var(--primary-btn);"></div>
-                        <div class="p-details">
-                            <div class="p-name">YOU</div>
-                            <div class="p-bet">${amount.toFixed(2)} 💎</div>
-                        </div>
-                    </div>
-                    <div class="p-profit" id="my_profit">Waiting</div>
-                </div>
-            `;
+        function adjustBet(amount) {
+            let input = document.getElementById('bet-amt');
+            let val = parseFloat(input.value) + amount;
+            if(val < 0.1) val = 0.1;
+            input.value = val.toFixed(1);
         }
 
-        // ================== أوامر المستخدم ==================
-        function handleAction() {
-            if (queuedBet > 0) {
-                updateBalance(queuedBet); queuedBet = 0;
-                actionBtn.innerText = "Place bet"; actionBtn.className = "btn-bet";
-            }
-            else if (gameState === 'waiting') {
-                if (betPlaced) {
-                    updateBalance(betAmount); betPlaced = false; betAmount = 0;
-                    actionBtn.innerText = "Place bet"; actionBtn.className = "btn-bet";
-                    playersList.innerHTML = '';
-                } else {
-                    let amt = parseFloat(document.getElementById('bet-input').value);
-                    if(amt > balance) { alert("رصيد غير كافٍ!"); return; }
-                    updateBalance(-amt);
-                    betPlaced = true; betAmount = amt; isCashedOut = false;
-                    actionBtn.innerText = "Cancel"; actionBtn.className = "btn-bet cancel";
-                    addMyRow(amt);
-                }
-            } 
-            else if (gameState === 'flying') {
-                if (betPlaced && !isCashedOut) {
-                    isCashedOut = true;
-                    let currentMulti = Math.exp(GROWTH_RATE * (Date.now() - startTime));
-                    let win = betAmount * currentMulti;
-                    updateBalance(win);
+        // حركة الصاروخ مطابقة للفيديو
+        let isPlaying = false;
+        function playRocket() {
+            if(isPlaying) return;
+            isPlaying = true;
+            
+            const btn = document.getElementById('btn-bet');
+            const multiText = document.getElementById('multi-text');
+            const rocket = document.getElementById('rocket-img');
+            const path = document.getElementById('rocket-path');
+            
+            btn.innerText = 'Cancel Bet';
+            btn.style.background = '#4a4a5a';
+            multiText.style.color = 'white';
+            
+            let multi = 1.00;
+            let width = 0;
+            let crashPoint = (Math.random() * 4 + 1.1).toFixed(2); // رقم عشوائي للطكة
+            
+            let interval = setInterval(() => {
+                multi += 0.02;
+                width += 1;
+                
+                multiText.innerText = multi.toFixed(2) + 'x';
+                rocket.style.bottom = (20 + (width * 0.8)) + 'px';
+                rocket.style.left = (20 + width) + 'px';
+                path.style.width = (width * 1.5) + 'px';
+
+                if(multi >= crashPoint) {
+                    clearInterval(interval);
+                    multiText.style.color = '#ff4444';
+                    rocket.src = 'https://cdn-icons-png.flaticon.com/512/1046/1046784.png'; // صورة انفجار
+                    btn.innerText = 'Place bet';
+                    btn.style.background = '#2575fc';
                     
-                    actionBtn.innerText = "Place bet"; actionBtn.className = "btn-bet";
-                    
-                    let myRow = document.getElementById('my_row');
-                    if(myRow) {
-                        myRow.classList.add('cashed');
-                        document.getElementById('my_profit').innerText = `${win.toFixed(2)} 💎`;
-                    }
-                } else {
-                    let amt = parseFloat(document.getElementById('bet-input').value);
-                    if(amt > balance) return;
-                    updateBalance(-amt);
-                    queuedBet = amt;
-                    actionBtn.innerText = "Cancel (Next Round)"; actionBtn.className = "btn-bet cancel";
+                    setTimeout(() => {
+                        isPlaying = false;
+                        rocket.src = 'https://cdn-icons-png.flaticon.com/512/3256/3256114.png';
+                        rocket.style.bottom = '20px';
+                        rocket.style.left = '20px';
+                        path.style.width = '0px';
+                        multiText.innerText = '1.00x';
+                        multiText.style.color = 'white';
+                    }, 2000);
                 }
-            }
-            else if (gameState === 'crashed') {
-                let amt = parseFloat(document.getElementById('bet-input').value);
-                if(amt > balance) return;
-                updateBalance(-amt);
-                queuedBet = amt;
-                actionBtn.innerText = "Cancel (Next Round)"; actionBtn.className = "btn-bet cancel";
-            }
+            }, 30);
         }
 
-        // تشغيل
-        startNewRound();
-
+        // جلب صورة المستخدم من تليجرام
+        const tg = window.Telegram.WebApp;
+        tg.expand();
+        if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
+            const user = tg.initDataUnsafe.user;
+            if (user.photo_url) {
+                document.getElementById('user-img').src = user.photo_url;
+            }
+        }
     </script>
 </body>
 </html>
