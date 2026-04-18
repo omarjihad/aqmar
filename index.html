@@ -7,7 +7,6 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
-        /* نظام تصميم عالي الجودة لـ "Epic" 💎 */
         :root {
             --bg-deep: #050507;
             --bg-card: #0e0f12;
@@ -17,124 +16,83 @@
             --text-muted: #8e8e93;
             --danger: #ff4444;
             --success: #00c851;
-            --gold: #ffd700;
         }
 
-        * {
-            box-sizing: border-box;
-            font-family: 'Cairo', sans-serif;
-            margin: 0;
-            padding: 0;
-            user-select: none;
-            -webkit-tap-highlight-color: transparent;
-        }
+        * { box-sizing: border-box; font-family: 'Cairo', sans-serif; margin: 0; padding: 0; user-select: none; -webkit-tap-highlight-color: transparent; }
+        body { background-color: var(--bg-deep); color: var(--text-main); overflow-x: hidden; padding-bottom: 80px; }
 
-        body {
-            background-color: var(--bg-deep);
-            color: var(--text-main);
-            overflow-x: hidden;
-            padding-bottom: 80px;
-        }
-
-        /* شاشة التحميل */
         #loader {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: var(--bg-deep);
             display: flex; flex-direction: column; justify-content: center; align-items: center;
             z-index: 9999; transition: opacity 0.5s;
         }
-        .spinner {
-            width: 60px; height: 60px;
-            border: 5px solid rgba(255,255,255,0.1);
-            border-top-color: var(--primary-glow);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
+        .spinner { width: 60px; height: 60px; border: 5px solid rgba(255,255,255,0.1); border-top-color: var(--primary-glow); border-radius: 50%; animation: spin 1s linear infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
 
-        /* الهيدر العلوي */
         .header {
             display: flex; justify-content: space-between; align-items: center;
-            padding: 15px 20px;
-            background: rgba(14, 15, 18, 0.9);
-            backdrop-filter: blur(10px);
-            position: fixed; top: 0; width: 100%; z-index: 100;
+            padding: 15px 20px; background: rgba(14, 15, 18, 0.9);
+            backdrop-filter: blur(10px); position: fixed; top: 0; width: 100%; z-index: 100;
             border-bottom: 1px solid rgba(255,255,255,0.05);
         }
         .user-info { display: flex; align-items: center; gap: 10px; }
         .avatar { width: 35px; height: 35px; border-radius: 50%; background: #333; border: 2px solid var(--accent-purple); }
-        .balance-amount { font-size: 18px; font-weight: 900; color: #00e6ff; text-shadow: 0 0 10px rgba(0, 230, 255, 0.4); }
+        .balance-amount { font-size: 18px; font-weight: 900; color: #00e6ff; }
 
-        /* شريط الجوائز الحي - حقيقي! */
         .top-bar-container { position: fixed; top: 65px; width: 100%; z-index: 90; }
         .live-drops { display: flex; gap: 12px; padding: 10px 20px; overflow-x: auto; background: rgba(5, 5, 7, 0.8); }
         .live-drops::-webkit-scrollbar { display: none; }
-        .drop-item { display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.05); padding: 5px 12px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.1); }
-        .drop-img { width: 20px; height: 20px; }
+        .drop-item { display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.05); padding: 5px 12px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.1); white-space: nowrap; }
 
-        /* الحاوية الرئيسية */
         .main-container { padding: 130px 20px 20px 20px; }
 
-        /* منطقة الـ Crash */
         .crash-banner {
             background: linear-gradient(135deg, #1a1a24 0%, #0e0f12 100%);
             border-radius: 20px; padding: 25px; margin-bottom: 20px;
             position: relative; overflow: hidden; border: 1px solid rgba(255,255,255,0.05);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
-        .badge-hot { background: #ff4444; color: white; font-size: 11px; padding: 3px 8px; border-radius: 6px; font-weight: 900; margin-bottom: 10px; display: inline-block; animation: pulse 2s infinite; }
-        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
         .multiplier-display { font-size: 50px; font-weight: 900; color: white; z-index: 10; position: relative; }
-        .crash-visuals { position: absolute; right: 20px; top: 50%; transform: translateY(-50%); font-size: 80px; z-index: 1; opacity: 0.8; }
+        .crash-visuals { position: absolute; right: 20px; top: 50%; transform: translateY(-50%); font-size: 80px; opacity: 0.8; }
 
-        /* عناصر التحكم */
-        .control-panel { background: var(--bg-card); border-radius: 20px; padding: 20px; border: 1px solid rgba(255,255,255,0.05); margin-bottom: 20px; }
+        .control-panel { background: var(--bg-card); border-radius: 20px; padding: 20px; border: 1px solid rgba(255,255,255,0.05); }
         .input-group { display: flex; background: #050507; border-radius: 12px; border: 1px solid #2a2a35; padding: 5px; margin-bottom: 15px; }
         .input-group button { background: transparent; border: none; color: white; font-size: 20px; width: 40px; }
         .input-group input { flex: 1; background: transparent; border: none; color: white; text-align: center; font-size: 18px; font-weight: bold; outline: none; }
 
-        .action-btn { width: 100%; padding: 15px; border-radius: 12px; font-size: 18px; font-weight: 900; color: white; border: none; cursor: pointer; transition: transform 0.1s; font-family: 'Cairo'; }
-        .action-btn:active { transform: scale(0.97); }
-        .btn-bet { background: linear-gradient(90deg, #0098ea, #8a2be2); box-shadow: 0 5px 15px rgba(0, 152, 234, 0.4); }
-        .btn-cashout { background: #00c851; color: black; box-shadow: 0 5px 15px rgba(0, 200, 81, 0.4); }
+        .action-btn { width: 100%; padding: 15px; border-radius: 12px; font-size: 18px; font-weight: 900; color: white; border: none; cursor: pointer; transition: transform 0.1s; }
+        .btn-bet { background: linear-gradient(90deg, #0098ea, #8a2be2); }
+        .btn-cashout { background: #00c851; color: black; }
 
-        /* شريط التنقل السفلي - حقيقي! */
-        .navbar {
-            position: fixed; bottom: 0; width: 100%; background: var(--bg-card); border-top: 1px solid rgba(255,255,255,0.05);
-            display: flex; justify-content: space-around; padding: 15px 0; z-index: 100;
-        }
+        .navbar { position: fixed; bottom: 0; width: 100%; background: var(--bg-card); border-top: 1px solid rgba(255,255,255,0.05); display: flex; justify-content: space-around; padding: 15px 0; z-index: 100; }
         .nav-item { color: var(--text-muted); font-size: 12px; text-align: center; opacity: 0.6; }
         .nav-item.active { color: white; opacity: 1; }
-        .nav-icon { font-size: 20px; display: block; margin-bottom: 2px; }
-
     </style>
 </head>
 <body>
 
-    <div id="loader">
-        <div class="spinner"></div>
-    </div>
+    <div id="loader"><div class="spinner"></div></div>
 
     <div class="header">
         <div class="user-info">
-            <img src="" class="avatar" id="user-avatar">
+            <img src="" class="avatar" id="user-avatar" onerror="this.src='https://via.placeholder.com/35'">
             <span id="user-name" style="font-weight: bold;">لاعب</span>
         </div>
-        <div class="balance-amount">💎 <span id="balance">0.00</span></div>
+        <div class="balance-amount">💎 <span id="balance">100.00</span></div>
     </div>
 
     <div class="top-bar-container">
-        <div class="live-drops" id="live-drops">
-            </div>
+        <div class="live-drops" id="live-drops"></div>
     </div>
 
     <div class="main-container">
         <div class="crash-banner">
             <div>
-                <span class="badge-hot">⚡ HOT</span>
+                <span style="color: #ff4444; font-size: 11px; font-weight: 900;">⚡ HOT</span>
                 <div class="multiplier-display" id="multiplier">1.00x</div>
             </div>
-            <div class="crash-visuals" id="crash-rocket">🚀</div> </div>
+            <div class="crash-visuals" id="crash-rocket">🚀</div>
+        </div>
 
         <div class="control-panel">
             <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 5px;">مبلغ الرهان (TON)</p>
@@ -148,32 +106,39 @@
     </div>
 
     <div class="navbar">
-        <div class="nav-item active"><span class="nav-icon">🎮</span> Live</div>
-        <div class="nav-item"><span class="nav-icon">📦</span> Cases</div>
-        <div class="nav-item"><span class="nav-icon">🏆</span> Top</div>
-        <div class="nav-item"><span class="nav-icon">👤</span> Profile</div>
+        <div class="nav-item active">🎮 Live</div>
+        <div class="nav-item">📦 Cases</div>
+        <div class="nav-item">🏆 Top</div>
+        <div class="nav-item">👤 Profile</div>
     </div>
 
     <script>
-        // إخفاء شاشة التحميل والتكامل مع تليجرام
         let tg = window.Telegram.WebApp;
         tg.expand();
-        
+        tg.ready(); // إخبار تليجرام أن التطبيق جاهز
+
         window.onload = () => {
-            setTimeout(() => { document.getElementById('loader').style.opacity = '0'; setTimeout(() => document.getElementById('loader').style.display = 'none', 500); }, 1000);
             if(tg.initDataUnsafe.user) {
                 document.getElementById('user-name').innerText = tg.initDataUnsafe.user.first_name;
-                if(tg.initDataUnsafe.user.photo_url) document.getElementById('user-avatar').src = tg.initDataUnsafe.user.photo_url;
+                if(tg.initDataUnsafe.user.photo_url) {
+                    document.getElementById('user-avatar').src = tg.initDataUnsafe.user.photo_url;
+                }
             }
+            // إخفاء اللودر
+            setTimeout(() => {
+                document.getElementById('loader').style.opacity = '0';
+                setTimeout(() => document.getElementById('loader').style.display = 'none', 500);
+            }, 800);
+            
+            updateDrops();
+            startGame();
         };
 
-        // الرهانات حقيقية، لا وجود للرهانات الوهمية!
-        let balance = 0.0;
+        let balance = 100.0;
         let betPlaced = false;
         let isCashedOut = false;
         let currentMultiplier = 1.0;
         let gameInterval;
-        let crashPoint;
 
         function updateBalance(amount) {
             balance += amount;
@@ -183,96 +148,75 @@
         function adjustBet(amount) {
             let input = document.getElementById('bet-amount');
             let val = parseFloat(input.value) + amount;
-            if(val < 0.1) val = 0.1;
-            input.value = val.toFixed(1);
+            input.value = Math.max(0.1, val).toFixed(1);
         }
 
-        // معالجة الإجراءات
         function handleAction() {
+            let btn = document.getElementById('action-btn');
             if(!betPlaced) {
-                // وضع رهان حقيقي
-                let amount = parseFloat(document.getElementById('bet-amount').value);
-                if(amount > balance) { tg.showAlert("رصيدك غير كافٍ!"); return; }
-                updateBalance(-amount);
+                let amt = parseFloat(document.getElementById('bet-amount').value);
+                if(amt > balance) { tg.showAlert("رصيدك غير كافٍ!"); return; }
+                updateBalance(-amt);
                 betPlaced = true;
                 isCashedOut = false;
-                document.getElementById('action-btn').innerText = "في الانتظار...";
-                document.getElementById('action-btn').className = "action-btn"; // تعطيل الزر مؤقتاً
-                tg.MainButton.setText("في الانتظار...").show(); // استخدام زر تليجرام الرئيسي
+                btn.innerText = "في الانتظار...";
+                btn.classList.add('disabled');
             } else if(betPlaced && !isCashedOut && currentMultiplier > 1.0) {
-                // سحب الأرباح حقيقي
-                let amount = parseFloat(document.getElementById('bet-amount').value);
-                let winAmount = amount * currentMultiplier;
-                updateBalance(winAmount);
+                let amt = parseFloat(document.getElementById('bet-amount').value);
+                updateBalance(amt * currentMultiplier);
                 isCashedOut = true;
-                document.getElementById('action-btn').innerText = `تم السحب: ${winAmount.toFixed(2)}`;
-                document.getElementById('action-btn').className = "action-btn btn-cashout";
-                tg.MainButton.setText(`تم السحب: ${winAmount.toFixed(2)}`).show();
+                btn.innerText = "تم السحب!";
+                btn.className = "action-btn btn-cashout";
             }
         }
 
-        // محاكاة الـ Crash (للتوضيح، يجب أن تكون في الـ Backend)
         function startGame() {
             currentMultiplier = 1.0;
-            crashPoint = (Math.random() * 3 + 1.1).toFixed(2); // يطك برقم عشوائي بين 1.1 و 4
+            let crashPoint = (Math.random() * 4 + 1.1);
+            let multiplierEl = document.getElementById('multiplier');
+            let rocketEl = document.getElementById('crash-rocket');
+            let btn = document.getElementById('action-btn');
+
+            multiplierEl.style.color = '#888';
+            rocketEl.innerText = '⏳';
             
-            // في الانتظار...
-            let waitTime = 3;
-            document.getElementById('multiplier').style.color = 'var(--text-muted)';
-            document.getElementById('crash-rocket').innerText = '⏳';
-            
-            let waitInterval = setInterval(() => {
-                document.getElementById('multiplier').innerText = `${waitTime}s`;
-                waitTime--;
-                if(waitTime < 0) {
-                    clearInterval(waitInterval);
-                    launch();
+            let wait = 3;
+            let timer = setInterval(() => {
+                multiplierEl.innerText = wait + "s";
+                wait--;
+                if(wait < 0) {
+                    clearInterval(timer);
+                    multiplierEl.style.color = '#fff';
+                    rocketEl.innerText = '🚀';
+                    if(betPlaced) btn.innerText = "سحب";
+                    
+                    gameInterval = setInterval(() => {
+                        currentMultiplier += 0.01;
+                        multiplierEl.innerText = currentMultiplier.toFixed(2) + "x";
+                        if(currentMultiplier >= crashPoint) {
+                            clearInterval(gameInterval);
+                            multiplierEl.style.color = '#ff4444';
+                            rocketEl.innerText = '💥';
+                            betPlaced = false;
+                            btn.innerText = "وضع الرهان";
+                            btn.className = "action-btn btn-bet";
+                            setTimeout(startGame, 3000);
+                        }
+                    }, 50);
                 }
             }, 1000);
         }
 
-        function launch() {
-            document.getElementById('multiplier').style.color = 'white';
-            document.getElementById('crash-rocket').innerText = '🚀'; // الرمز الصاروخي المطلوب
-            
-            gameInterval = setInterval(() => {
-                currentMultiplier += 0.01;
-                document.getElementById('multiplier').innerText = `${currentMultiplier.toFixed(2)}x`;
-                
-                if(currentMultiplier >= crashPoint) {
-                    clearInterval(gameInterval);
-                    document.getElementById('multiplier').style.color = 'var(--danger)';
-                    document.getElementById('crash-rocket').innerText = '💥'; // الانفجار المطلوب
-                    betPlaced = false;
-                    
-                    // إعادة ضبط الزر بعد الانفجار
-                    document.getElementById('action-btn').innerText = "وضع الرهان";
-                    document.getElementById('action-btn').className = "action-btn btn-bet";
-                    tg.MainButton.hide();
-                    
-                    setTimeout(startGame, 3000);
-                }
-            }, 50);
+        function updateDrops() {
+            const drops = [
+                {n: 'Ali', v: '+2.5'}, {n: 'Omar', v: '+12'}, {n: 'Zaid', v: '+0.5'}
+            ];
+            let html = '';
+            drops.forEach(d => {
+                html += `<div class="drop-item">💎 <span>${d.n}</span> <b style="color:#00c851">${d.v}</b></div>`;
+            });
+            document.getElementById('live-drops').innerHTML = html;
         }
-
-        // تشغيل اللعبة
-        startGame();
-
-        // جلب الجوائز الحقيقية (تحتاج إلى ربطها بالـ Backend)
-        const dropsHTML =:
-            <div class="drop-item">
-                <div style="font-size: 16px;">💎</div>
-                <span>Ali</span>
-                <span style="color: var(--success); font-weight: bold;">+2.5 💎</span>
-            </div>
-            <div class="drop-item">
-                <div style="font-size: 16px;">🚀</div>
-                <span>Omar</span>
-                <span style="color: var(--success); font-weight: bold;">+15 💎</span>
-            </div>
-        ;
-        document.getElementById('live-drops').innerHTML = dropsHTML;
-
     </script>
 </body>
 </html>
