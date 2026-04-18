@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>محلل الشطرنج الذكي</title>
+    <title>مساعد الشطرنج الأسطوري</title>
     <link rel="stylesheet" href="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css">
     <style>
         /* التصميم الاحترافي والملحمي */
@@ -33,7 +33,6 @@
             background-color: #1a1a24;
         }
         
-        /* تلوين الرقعة لتناسب الثيم المظلم الاحترافي */
         .white-1e1d7 { background-color: #cfd8e3; }
         .black-3c85d { background-color: #5c748a; }
 
@@ -54,7 +53,17 @@
             color: #0d0d12;
             box-shadow: 0 0 15px #00ffcc;
         }
-        #best-move-display {
+        
+        /* زر أفضل نقلة المميز */
+        #best-move-btn {
+            background-color: rgba(0, 255, 204, 0.1);
+            font-size: 1.1em;
+            padding: 12px 20px;
+            border-width: 2px;
+            box-shadow: 0 0 10px rgba(0, 255, 204, 0.4);
+        }
+
+        #status-display {
             margin-top: 20px;
             font-size: 1.3em;
             font-weight: bold;
@@ -63,59 +72,56 @@
             height: 30px;
         }
 
-        /* تنسيق علامات الحركات الممكنة (نقاط دوائر) */
+        /* تنسيقات التحديد والحركة */
         .highlight-move { position: relative; }
         .highlight-move::after {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 28%;
-            height: 28%;
-            background-color: rgba(0, 255, 204, 0.7);
-            border-radius: 50%;
-            box-shadow: 0 0 8px #00ffcc;
-            pointer-events: none; /* حتى ما تمنع الضغط على المربع */
+            content: ''; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 28%; height: 28%; background-color: rgba(0, 255, 204, 0.7);
+            border-radius: 50%; box-shadow: 0 0 8px #00ffcc; pointer-events: none;
         }
-
-        /* تنسيق علامة الهجوم (لون أحمر على قطع الخصم) */
         .highlight-capture::after {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 80%;
-            height: 80%;
-            background-color: transparent;
-            border: 4px solid rgba(255, 0, 85, 0.8);
-            border-radius: 50%;
-            box-shadow: inset 0 0 10px #ff0055, 0 0 10px #ff0055;
-            pointer-events: none;
+            content: ''; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 80%; height: 80%; background-color: transparent; border: 4px solid rgba(255, 0, 85, 0.8);
+            border-radius: 50%; box-shadow: inset 0 0 10px #ff0055, 0 0 10px #ff0055; pointer-events: none;
         }
+        .highlight-selected { background-color: rgba(0, 255, 204, 0.4) !important; }
 
-        /* تمييز المربع المحدد حالياً */
-        .highlight-selected {
-            background-color: rgba(0, 255, 204, 0.4) !important;
+        /* شاشة اختيار الفريق */
+        #team-selector {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(13, 13, 18, 0.95); z-index: 1000;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
         }
+        .team-btn {
+            font-size: 1.5em; padding: 15px 40px; margin: 15px; border-radius: 10px; cursor: pointer;
+            border: 2px solid #00ffcc; font-weight: bold; transition: 0.3s;
+        }
+        .team-white { background-color: #fff; color: #000; }
+        .team-black { background-color: #222; color: #fff; border-color: #ff0055; }
+        .team-white:hover { box-shadow: 0 0 20px #fff; }
+        .team-black:hover { box-shadow: 0 0 20px #ff0055; }
     </style>
 </head>
 <body>
 
-    <h2>♟️ محلل الشطرنج الذكي</h2>
+    <div id="team-selector">
+        <h2>اختر فريقك ⚔️</h2>
+        <button class="team-btn team-white" onclick="setTeam('w')">العب بالأبيض ⚪</button>
+        <button class="team-btn team-black" onclick="setTeam('b')">العب بالأسود ⚫</button>
+    </div>
+
+    <h2>♟️ مساعد الشطرنج الأسطوري</h2>
     
     <div id="board-container">
         <div id="board"></div>
     </div>
     
     <div>
-        <button class="btn" onclick="getBestMove()">أوجد أفضل نقلة 🧠</button>
-        <button class="btn" onclick="flipBoard()">قلب الرقعة 🔄</button>
-        <button class="btn" onclick="resetBoard()">إعادة ♻️</button>
+        <button id="best-move-btn" class="btn" onclick="getBestMove()">أوجد أفضل نقلة 🧠</button>
+        <button class="btn" onclick="resetGame()">إعادة لعبة جديدة ♻️</button>
     </div>
 
-    <div id="best-move-display">اضغط على القطعة لتحديدها ثم اختر المربع</div>
+    <div id="status-display">جاري تجهيز الرقعة...</div>
 
     <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
     <script src="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.js"></script>
@@ -124,103 +130,144 @@
     <script>
         var board = null;
         var game = new Chess();
-        var selectedSquare = null; // لحفظ المربع اللي ضغطت عليه
+        var selectedSquare = null;
+        var playerTeam = 'w'; // الافتراضي أبيض
 
-        // إعدادات الرقعة (ألغينا السحب والإفلات drag)
         var config = {
-            draggable: false, // تم إيقاف السحب لتمكين نظام الضغط
+            draggable: false,
             position: 'start',
-            pieceTheme: 'https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png' // أشكال القطع الرسمية الواضحة
+            pieceTheme: 'https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png'
         };
         board = Chessboard('board', config);
 
-        // تنظيف كل التحديدات من الرقعة
+        // اختيار الفريق وبدء اللعبة
+        function setTeam(color) {
+            playerTeam = color;
+            document.getElementById('team-selector').style.display = 'none';
+            if (color === 'b') {
+                board.orientation('black');
+            } else {
+                board.orientation('white');
+            }
+            updateGameStatus();
+        }
+
+        // تحديث حالة اللعبة (إخفاء/إظهار الأزرار وتغيير النص)
+        function updateGameStatus() {
+            if (game.game_over()) {
+                document.getElementById('status-display').innerText = "انتهت اللعبة! 🏁";
+                $('#best-move-btn').hide();
+                return;
+            }
+
+            var currentTurn = game.turn();
+            if (currentTurn === playerTeam) {
+                // دور اللاعب
+                document.getElementById('status-display').innerText = "دورك.. اضغط على الزر لمعرفة النقلة الأسطورية 🔥";
+                document.getElementById('status-display').style.color = "#00ffcc";
+                $('#best-move-btn').show();
+            } else {
+                // دور الخصم
+                document.getElementById('status-display').innerText = "ما هي حركة الخصم؟ ⏳";
+                document.getElementById('status-display').style.color = "#ff0055";
+                $('#best-move-btn').hide(); // إخفاء الزر حتى ما تضغطه
+            }
+        }
+
         function removeHighlights() {
             $('#board .square-55d63').removeClass('highlight-move highlight-capture highlight-selected');
         }
 
-        // نظام الضغط على المربعات والقطع (Click to Move)
+        // نظام الضغط على المربعات (لإدخال حركات الخصم أو حركتك اليدوية)
         $('#board').on('click', '.square-55d63', function() {
             var square = $(this).attr('data-square');
             var piece = game.get(square);
 
-            // إذا كنت محدد قطعة مسبقاً، وحالياً ضغطت على مربع جديد للتحرك
             if (selectedSquare) {
                 var moves = game.moves({ square: selectedSquare, verbose: true });
                 var isLegalMove = moves.find(m => m.to === square);
 
                 if (isLegalMove) {
-                    // تنفيذ الحركة
-                    game.move({
-                        from: selectedSquare,
-                        to: square,
-                        promotion: 'q' // ترقية تلقائية للوزير
-                    });
-                    board.position(game.fen(), true); // تحديث شكل الرقعة بانميشن سريع
+                    game.move({ from: selectedSquare, to: square, promotion: 'q' });
+                    board.position(game.fen(), true);
                     removeHighlights();
                     selectedSquare = null;
-                    document.getElementById('best-move-display').innerText = "";
+                    updateGameStatus(); // تحديث الحالة بعد كل حركة
                     return;
                 }
             }
 
-            // إذا ضغطت على قطعة خاصة بيك لتحديدها
             removeHighlights();
+            // السماح بتحديد القطعة فقط إذا كان دورها (سواء الك أو للخصم)
             if (piece && piece.color === game.turn()) {
                 selectedSquare = square;
                 $(this).addClass('highlight-selected');
                 
-                // جلب الحركات المسموحة ورسم النقاط
                 var moves = game.moves({ square: square, verbose: true });
                 moves.forEach(function(m) {
                     var $targetSquare = $('#board .square-' + m.to);
                     if (m.captured) {
-                        $targetSquare.addClass('highlight-capture'); // مربع أحمر إذا اكو هجوم
+                        $targetSquare.addClass('highlight-capture');
                     } else {
-                        $targetSquare.addClass('highlight-move'); // نقطة نيون زرقاء للحركة العادية
+                        $targetSquare.addClass('highlight-move');
                     }
                 });
             } else {
-                selectedSquare = null; // إلغاء التحديد إذا ضغطت على مكان فارغ
+                selectedSquare = null;
             }
         });
 
-        // جلب أفضل نقلة من محرك ستوكفيش
+        // الذكاء الاصطناعي الأسطوري (يحرك القطعة تلقائياً)
         function getBestMove() {
-            if (game.game_over()) {
-                document.getElementById('best-move-display').innerText = "انتهت اللعبة!";
-                return;
-            }
-
             var fen = game.fen();
-            document.getElementById('best-move-display').innerText = "جاري التحليل المعمق...";
+            document.getElementById('status-display').innerText = "جاري الحساب بعمق أسطوري... 🧠⚙️";
+            $('#best-move-btn').hide(); // إخفاء الزر أثناء التحليل
 
-            fetch(`https://stockfish.online/api/s/v2.php?fen=${fen}&depth=12`)
+            // تم رفع الـ depth إلى 15 ليعطي نقلات بمستوى جراند ماستر
+            fetch(`https://stockfish.online/api/s/v2.php?fen=${fen}&depth=15`)
                 .then(response => response.json())
                 .then(data => {
                     if(data.success) {
-                        let bestMove = data.bestmove.split(" ")[1];
-                        document.getElementById('best-move-display').innerText = "🔥 أفضل نقلة هي: " + bestMove.toUpperCase();
+                        let bestMoveStr = data.bestmove.split(" ")[1]; // مثال: e2e4
+                        
+                        // تحليل النص القادم من البوت لتحويله لحركة فعلية
+                        let fromSq = bestMoveStr.substring(0, 2);
+                        let toSq = bestMoveStr.substring(2, 4);
+                        let promo = bestMoveStr.length > 4 ? bestMoveStr.charAt(4) : 'q';
+
+                        // تنفيذ الحركة تلقائياً بالنيابة عنك
+                        game.move({
+                            from: fromSq,
+                            to: toSq,
+                            promotion: promo
+                        });
+                        
+                        // تحديث الرقعة بانميشن
+                        board.position(game.fen(), true);
+                        removeHighlights();
+                        selectedSquare = null;
+
+                        // تحديث الحالة إلى دور الخصم
+                        updateGameStatus(); 
                     } else {
-                        document.getElementById('best-move-display').innerText = "حدث خطأ في التحليل.";
+                        document.getElementById('status-display').innerText = "حدث خطأ في التحليل.";
+                        $('#best-move-btn').show();
                     }
                 })
                 .catch(err => {
-                    document.getElementById('best-move-display').innerText = "فشل الاتصال بالمحرك!";
+                    document.getElementById('status-display').innerText = "فشل الاتصال بالمحرك!";
+                    $('#best-move-btn').show();
                 });
         }
 
-        function flipBoard() { 
-            board.flip(); 
+        // إعادة اللعبة بالكامل
+        function resetGame() {
+            game.reset();
+            board.start();
             removeHighlights();
             selectedSquare = null;
-        }
-        function resetBoard() { 
-            game.reset(); 
-            board.start(); 
-            removeHighlights();
-            selectedSquare = null;
-            document.getElementById('best-move-display').innerText = "اضغط على القطعة لتحديدها ثم اختر المربع"; 
+            $('#best-move-btn').show();
+            document.getElementById('team-selector').style.display = 'flex'; // إظهار شاشة اختيار الفريق من جديد
         }
     </script>
 </body>
