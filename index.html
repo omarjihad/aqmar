@@ -2,301 +2,77 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>NFT Battle - Perfect Clone</title>
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@600;800;900&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>محلل الشطرنج الذكي</title>
+    <link rel="stylesheet" href="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css">
     <style>
-        :root {
-            --bg-main: #0f0f13;
-            --bg-card: #1c1c24;
-            --ton-blue: #0098ea;
-            --text-main: #ffffff;
-            --text-muted: #8e8e93;
-        }
-
-        * { box-sizing: border-box; font-family: 'Cairo', sans-serif; margin: 0; padding: 0; user-select: none; -webkit-tap-highlight-color: transparent; }
-        body { background-color: var(--bg-main); color: var(--text-main); overflow-x: hidden; padding-bottom: 80px; }
-
-        /* الهيدر العلوي */
-        .header {
-            display: flex; justify-content: space-between; align-items: center;
-            padding: 15px 20px; background: var(--bg-main); position: sticky; top: 0; z-index: 100;
-        }
-        .user-info { display: flex; align-items: center; gap: 10px; }
-        .avatar { width: 38px; height: 38px; border-radius: 50%; background: #333; overflow: hidden; border: 2px solid #2a2a35; }
-        .avatar img { width: 100%; height: 100%; object-fit: cover; }
-        .balance-info { display: flex; flex-direction: column; }
-        .balance-title { font-size: 11px; color: var(--text-muted); }
-        .balance-amount { font-size: 16px; font-weight: 900; color: #00e6ff; display: flex; align-items: center; gap: 4px; }
-        .btn-deposit { background: #4a4a5a; color: white; border: none; padding: 8px 16px; border-radius: 10px; font-weight: bold; font-size: 13px; }
-
-        .container { padding: 0 15px; }
-
-        /* نظام الصفحات */
-        .page { display: none; animation: fadeIn 0.2s ease; }
-        .page.active { display: block; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-
-        /* --- صفحة LIVE (الرئيسية) --- */
-        /* شريط الـ Daily Box */
-        .daily-box-section { background: #1a1a1a; border-radius: 16px; padding: 15px; margin-bottom: 20px; border: 1px solid #333; }
-        .daily-header { display: flex; justify-content: space-between; margin-bottom: 15px; align-items: center; }
-        .badge-hot { background: #ff4444; color: white; padding: 2px 8px; border-radius: 6px; font-size: 11px; font-weight: 900; }
-        .daily-items { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 5px; }
-        .daily-items::-webkit-scrollbar { display: none; }
-        .d-item { width: 50px; height: 50px; border-radius: 12px; flex-shrink: 0; display: flex; justify-content: center; align-items: center; font-size: 24px; }
-        .timer-btn { width: 100%; background: #2a2a35; color: var(--text-muted); border: none; padding: 12px; border-radius: 10px; margin-top: 15px; font-weight: bold; font-family: monospace; font-size: 16px; }
-
-        /* أزرار ROCKET و PVP */
-        .banners-scroll { display: flex; gap: 10px; overflow-x: auto; margin-bottom: 15px; }
-        .banners-scroll::-webkit-scrollbar { display: none; }
-        .banner-card { min-width: 140px; border-radius: 16px; padding: 15px; position: relative; overflow: hidden; flex: 1; cursor: pointer; }
-        .banner-rocket { background: linear-gradient(135deg, #2b5876, #4e4376); border: 1px solid #4e4376; }
-        .banner-pvp { background: linear-gradient(135deg, #ff9900, #ff5500); border: 1px solid #ff9900; }
-        .b-title { font-size: 18px; font-weight: 900; font-style: italic; margin-top: 5px; }
-        
-        .half-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
-        .half-btn { background: #3a0ca3; border-radius: 12px; padding: 15px; display: flex; justify-content: space-between; font-weight: bold; color: white; }
-        .half-btn.green { background: #11998e; }
-
-        /* شبكة الصناديق */
-        .cases-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        .case-card { background: var(--bg-card); border-radius: 16px; padding: 15px; text-align: center; border: 1px solid rgba(255,255,255,0.05); position: relative; overflow: hidden; display: flex; flex-direction: column; justify-content: space-between; min-height: 160px; }
-        .case-title { font-size: 20px; font-weight: 900; margin-bottom: 5px; text-transform: uppercase; }
-        .case-img { height: 70px; object-fit: contain; margin: 10px 0; filter: drop-shadow(0 5px 15px rgba(0,0,0,0.5)); }
-        .case-btn { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: white; padding: 6px; border-radius: 8px; font-size: 12px; width: 100%; font-weight: bold; }
-
-        /* --- صفحة ROCKET --- */
-        .rocket-page { height: calc(100vh - 70px); display: flex; flex-direction: column; background: #0a0a0f; }
-        .game-area { flex: 1; position: relative; display: flex; justify-content: center; align-items: center; overflow: hidden; border-bottom: 2px solid #222; }
-        .multiplier { font-size: 70px; font-weight: 900; z-index: 2; color: white; }
-        .rocket-obj { position: absolute; bottom: 20px; left: 20px; width: 60px; transform: rotate(45deg); z-index: 3; transition: all 0.1s linear; }
-        .rocket-path { position: absolute; bottom: 45px; left: 40px; width: 0; height: 4px; background: #ff4444; box-shadow: 0 0 10px #ff4444; z-index: 2; transform-origin: left; transform: rotate(-20deg); border-radius: 2px; }
-
-        .controls-area { padding: 15px; background: var(--bg-main); }
-        .history-bar { display: flex; gap: 8px; overflow-x: auto; margin-bottom: 15px; padding-bottom: 5px; }
-        .history-bar::-webkit-scrollbar { display: none; }
-        .h-item { padding: 4px 10px; border-radius: 8px; font-size: 12px; font-weight: bold; background: #2a2a35; color: white; }
-        .h-item.green { color: #00C851; background: rgba(0, 200, 81, 0.1); }
-        .h-item.red { color: #ff4444; background: rgba(255, 68, 68, 0.1); }
-
-        .input-row { display: flex; background: #1c1c24; border-radius: 12px; margin-bottom: 15px; padding: 5px; align-items: center; border: 1px solid #333; }
-        .input-row button { background: transparent; border: none; color: white; font-size: 20px; width: 40px; height: 40px; }
-        .input-row input { flex: 1; background: transparent; border: none; color: white; text-align: center; font-size: 16px; font-weight: bold; outline: none; }
-
-        .btn-place-bet { background: #2575fc; color: white; border: none; width: 100%; padding: 16px; border-radius: 12px; font-size: 18px; font-weight: 900; font-family: 'Cairo'; cursor: pointer; }
-
-        /* الناف بار السفلي */
-        .navbar {
-            position: fixed; bottom: 0; width: 100%; background: #15151a;
-            border-top: 1px solid #222; display: flex; justify-content: space-around; padding: 10px 0 20px 0; z-index: 100;
-        }
-        .nav-item { color: var(--text-muted); font-size: 11px; font-weight: bold; text-align: center; opacity: 0.5; transition: 0.2s; cursor: pointer; }
-        .nav-item.active { color: white; opacity: 1; }
-        .nav-icon { font-size: 22px; display: block; margin-bottom: 2px; }
-
+        body { font-family: Arial, sans-serif; text-align: center; background-color: #1e1e1e; color: white; padding: 20px; }
+        #board { width: 100%; max-width: 400px; margin: 0 auto 20px auto; }
+        .btn { padding: 10px 20px; margin: 5px; background: #0088cc; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        #best-move-display { margin-top: 20px; font-size: 1.2em; font-weight: bold; color: #4CAF50; }
     </style>
 </head>
 <body>
 
-    <div class="header" id="main-header">
-        <div class="user-info">
-            <div class="avatar"><img src="https://via.placeholder.com/40" id="user-img"></div>
-            <div class="balance-info">
-                <span class="balance-title">Your balance</span>
-                <span class="balance-amount"><span style="font-size: 12px;">💎</span> 0.241</span>
-            </div>
-        </div>
-        <button class="btn-deposit">Deposit</button>
-    </div>
+    <h2>محلل الشطرنج ♟️</h2>
+    <div id="board"></div>
+    
+    <button class="btn" onclick="getBestMove()">أوجد أفضل نقلة للذكاء الاصطناعي 🧠</button>
+    <button class="btn" onclick="flipBoard()">قلب الرقعة 🔄</button>
+    <button class="btn" onclick="resetBoard()">إعادة اللعبة ♻️</button>
 
-    <div id="page-live" class="page active">
-        <div class="container">
-            
-            <div class="daily-box-section">
-                <div class="daily-header">
-                    <div style="display: flex; align-items: center; gap: 10px;">
-                        <span class="badge-hot">HOT</span>
-                        <span style="font-weight: bold;">Daily Box</span>
-                    </div>
-                </div>
-                <div class="daily-items">
-                    <div class="d-item" style="background: #e74c3c;">❤️</div>
-                    <div class="d-item" style="background: #3498db;">💎</div>
-                    <div class="d-item" style="background: #9b59b6;">🚀</div>
-                    <div class="d-item" style="background: #f1c40f;">🎁</div>
-                    <div class="d-item" style="background: #2ecc71;">👾</div>
-                </div>
-                <button class="timer-btn">⏱ 23h 36m 10s</button>
-            </div>
+    <div id="best-move-display">العب نقلتك ثم اضغط على الزر لمعرفة أفضل رد!</div>
 
-            <div class="banners-scroll">
-                <div class="banner-card banner-rocket" onclick="switchPage('page-rocket', document.querySelectorAll('.nav-item')[1])">
-                    <span class="badge-hot" style="background: white; color: black;">HOT!</span>
-                    <div class="b-title">🚀 ROCKET</div>
-                </div>
-                <div class="banner-card banner-pvp">
-                    <span class="badge-hot" style="background: #ffcc00; color: black;">NEW!</span>
-                    <div class="b-title">⚔️ PVP</div>
-                </div>
-            </div>
-
-            <div class="half-grid">
-                <div class="half-btn"><span>📄 CONTRACTS</span> <span>›</span></div>
-                <div class="half-btn green"><span>⬆️ UPGRADE</span> <span>›</span></div>
-            </div>
-
-            <div class="cases-grid">
-                <div class="case-card" style="background: linear-gradient(180deg, #3a2a1a, var(--bg-card)); border-color: #ffd700;">
-                    <div class="case-title" style="color: #ffd700;">FREE24</div>
-                    <img src="https://cdn-icons-png.flaticon.com/512/836/836048.png" class="case-img">
-                    <button class="case-btn" style="border-color: #ffd700; color: #ffd700;">📅 FREE</button>
-                </div>
-                
-                <div class="case-card" style="background: linear-gradient(180deg, #1a2a3a, var(--bg-card)); border-color: #00e6ff;">
-                    <div class="case-title" style="color: #00e6ff;">FREE</div>
-                    <img src="https://cdn-icons-png.flaticon.com/512/7185/7185711.png" class="case-img">
-                    <button class="case-btn" style="background: #8a2be2; border: none;">🎁 FREE</button>
-                </div>
-
-                <div class="case-card">
-                    <div class="case-title" style="color: #00C851;">FARM</div>
-                    <img src="https://cdn-icons-png.flaticon.com/512/2821/2821878.png" class="case-img">
-                    <button class="case-btn">0.1 💎</button>
-                </div>
-
-                <div class="case-card" style="background: linear-gradient(180deg, #3a1a2a, var(--bg-card));">
-                    <div class="badge-hot" style="background: #ff44aa; color: white; position: absolute; top: 10px; right: 10px;">LIMITED</div>
-                    <div class="case-title" style="color: #ffaaee; margin-top: 15px;">SPRING</div>
-                    <img src="https://cdn-icons-png.flaticon.com/512/1043/1043446.png" class="case-img">
-                    <button class="case-btn">5 💎</button>
-                </div>
-            </div>
-
-        </div>
-    </div>
-
-    <div id="page-rocket" class="page">
-        <div class="rocket-page">
-            <div class="game-area">
-                <div style="position: absolute; top: 20px; left: 20px; display: flex; align-items: center; gap: 5px;">
-                    <div style="width: 8px; height: 8px; background: #00C851; border-radius: 50%;"></div>
-                    <span style="font-size: 12px; color: #00C851;">online</span>
-                </div>
-                <div style="position: absolute; top: 20px; right: 20px; background: rgba(255,255,255,0.1); padding: 5px 10px; border-radius: 10px; font-weight: bold;">💎 0.24</div>
-                
-                <div class="multiplier" id="multi-text">1.00x</div>
-                <div class="rocket-path" id="rocket-path"></div>
-                <img src="https://cdn-icons-png.flaticon.com/512/3256/3256114.png" class="rocket-obj" id="rocket-img">
-            </div>
-
-            <div class="controls-area">
-                <div class="history-bar">
-                    <div class="h-item">1.00x</div>
-                    <div class="h-item green">1.92x</div>
-                    <div class="h-item green">1.53x</div>
-                    <div class="h-item red">4.55x</div>
-                    <div class="h-item green">2.58x</div>
-                </div>
-
-                <div class="input-row">
-                    <button onclick="adjustBet(-0.1)">-</button>
-                    <input type="number" id="bet-amt" value="0.20" step="0.1">
-                    <button onclick="adjustBet(0.1)">+</button>
-                </div>
-
-                <button class="btn-place-bet" id="btn-bet" onclick="playRocket()">Place bet</button>
-            </div>
-        </div>
-    </div>
-
-    <div class="navbar">
-        <div class="nav-item active" onclick="switchPage('page-live', this)"><span class="nav-icon">🎮</span> Live</div>
-        <div class="nav-item" onclick="switchPage('page-rocket', this)"><span class="nav-icon">🚀</span> Rocket</div>
-        <div class="nav-item"><span class="nav-icon">⚔️</span> PVP</div>
-        <div class="nav-item"><span class="nav-icon">👤</span> Profile</div>
-    </div>
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
 
     <script>
-        // التبديل بين الصفحات وإخفاء الهيدر بالصاروخ
-        function switchPage(pageId, element) {
-            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-            document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
-            document.getElementById(pageId).classList.add('active');
-            element.classList.add('active');
-            
-            if(pageId === 'page-rocket') {
-                document.getElementById('main-header').style.display = 'none';
-            } else {
-                document.getElementById('main-header').style.display = 'flex';
-            }
+        var board = null;
+        var game = new Chess();
+
+        // إعدادات الرقعة
+        var config = {
+            draggable: true,
+            position: 'start',
+            onDrop: handleMove
+        };
+        board = Chessboard('board', config);
+
+        // وظيفة التعامل مع النقلات (للتأكد أن النقلة قانونية)
+        function handleMove(source, target) {
+            var move = game.move({
+                from: source,
+                to: target,
+                promotion: 'q' // دائماً ترقية لوزير للتبسيط
+            });
+
+            if (move === null) return 'snapback'; // إرجاع القطعة إذا النقلة خطأ
         }
 
-        function adjustBet(amount) {
-            let input = document.getElementById('bet-amt');
-            let val = parseFloat(input.value) + amount;
-            if(val < 0.1) val = 0.1;
-            input.value = val.toFixed(1);
+        // جلب أفضل نقلة من Stockfish API
+        function getBestMove() {
+            var fen = game.fen(); // أخذ حالة الرقعة الحالية
+            document.getElementById('best-move-display').innerText = "جاري التفكير...";
+
+            // استخدام API مجاني لمحرك Stockfish
+            fetch(`https://stockfish.online/api/s/v2.php?fen=${fen}&depth=12`)
+                .then(response => response.json())
+                .then(data => {
+                    if(data.success) {
+                        let bestMove = data.bestmove.split(" ")[1];
+                        document.getElementById('best-move-display').innerText = "أفضل نقلة هي: " + bestMove;
+                    } else {
+                        document.getElementById('best-move-display').innerText = "حدث خطأ في التحليل.";
+                    }
+                })
+                .catch(err => {
+                    document.getElementById('best-move-display').innerText = "فشل الاتصال بالمحرك!";
+                });
         }
 
-        // حركة الصاروخ مطابقة للفيديو
-        let isPlaying = false;
-        function playRocket() {
-            if(isPlaying) return;
-            isPlaying = true;
-            
-            const btn = document.getElementById('btn-bet');
-            const multiText = document.getElementById('multi-text');
-            const rocket = document.getElementById('rocket-img');
-            const path = document.getElementById('rocket-path');
-            
-            btn.innerText = 'Cancel Bet';
-            btn.style.background = '#4a4a5a';
-            multiText.style.color = 'white';
-            
-            let multi = 1.00;
-            let width = 0;
-            let crashPoint = (Math.random() * 4 + 1.1).toFixed(2); // رقم عشوائي للطكة
-            
-            let interval = setInterval(() => {
-                multi += 0.02;
-                width += 1;
-                
-                multiText.innerText = multi.toFixed(2) + 'x';
-                rocket.style.bottom = (20 + (width * 0.8)) + 'px';
-                rocket.style.left = (20 + width) + 'px';
-                path.style.width = (width * 1.5) + 'px';
-
-                if(multi >= crashPoint) {
-                    clearInterval(interval);
-                    multiText.style.color = '#ff4444';
-                    rocket.src = 'https://cdn-icons-png.flaticon.com/512/1046/1046784.png'; // صورة انفجار
-                    btn.innerText = 'Place bet';
-                    btn.style.background = '#2575fc';
-                    
-                    setTimeout(() => {
-                        isPlaying = false;
-                        rocket.src = 'https://cdn-icons-png.flaticon.com/512/3256/3256114.png';
-                        rocket.style.bottom = '20px';
-                        rocket.style.left = '20px';
-                        path.style.width = '0px';
-                        multiText.innerText = '1.00x';
-                        multiText.style.color = 'white';
-                    }, 2000);
-                }
-            }, 30);
-        }
-
-        // جلب صورة المستخدم من تليجرام
-        const tg = window.Telegram.WebApp;
-        tg.expand();
-        if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
-            const user = tg.initDataUnsafe.user;
-            if (user.photo_url) {
-                document.getElementById('user-img').src = user.photo_url;
-            }
-        }
+        function flipBoard() { board.flip(); }
+        function resetBoard() { game.reset(); board.start(); document.getElementById('best-move-display').innerText = ""; }
     </script>
 </body>
 </html>
