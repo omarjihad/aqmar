@@ -3,81 +3,101 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Epic Crash Clone</title>
+    <title>Epic Crash - Perfect Clone 🚀</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@500;700;900&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-color: #12141c;
-            --grid-color: rgba(255, 255, 255, 0.03);
-            --primary-blue: #007aff;
-            --danger-red: #ff4444;
+            --bg-main: #0b0e14;
+            --grid-color: rgba(255, 255, 255, 0.04);
+            --primary-btn: #0066ff;
+            --danger: #ff3b30;
+            --success: #00c851;
             --text-main: #ffffff;
-            --text-muted: #7b8399;
+            --text-muted: #6b7280;
+            --panel-bg: #121620;
         }
 
-        * { box-sizing: border-box; font-family: 'Inter', sans-serif; margin: 0; padding: 0; user-select: none; -webkit-tap-highlight-color: transparent; }
-        body { background-color: var(--bg-color); color: var(--text-main); overflow: hidden; display: flex; flex-direction: column; height: 100vh; }
+        * { box-sizing: border-box; font-family: 'Roboto', sans-serif; margin: 0; padding: 0; user-select: none; -webkit-tap-highlight-color: transparent; }
+        body { background-color: var(--bg-main); color: var(--text-main); overflow: hidden; display: flex; flex-direction: column; height: 100vh; }
 
-        /* الهيدر مطابق لـ Epic */
-        .header { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; z-index: 10; border-bottom: 1px solid rgba(255,255,255,0.05); }
-        .balance { background: rgba(255, 255, 255, 0.05); padding: 8px 15px; border-radius: 8px; font-weight: 900; font-size: 16px; border: 1px solid rgba(255,255,255,0.1); }
-        .online { display: flex; align-items: center; gap: 6px; font-size: 14px; font-weight: bold; color: #00c851; }
-        .dot { width: 8px; height: 8px; background: #00c851; border-radius: 50%; box-shadow: 0 0 8px #00c851; animation: pulse 1.5s infinite; }
-        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        /* ========= الهيدر العلوي ========= */
+        .header { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; z-index: 10; border-bottom: 1px solid rgba(255,255,255,0.05); background: var(--bg-main); }
+        .balance-badge { background: rgba(0, 102, 255, 0.1); padding: 6px 12px; border-radius: 8px; font-weight: 900; font-size: 16px; border: 1px solid rgba(0, 102, 255, 0.3); color: white; display: flex; align-items: center; gap: 5px; }
+        .online-badge { display: flex; align-items: center; gap: 6px; font-size: 14px; font-weight: bold; color: var(--success); }
+        .dot { width: 8px; height: 8px; background: var(--success); border-radius: 50%; box-shadow: 0 0 8px var(--success); animation: blink 1.5s infinite; }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
 
-        /* منطقة اللعبة والشبكة (Grid) */
+        /* ========= منطقة اللعبة والشبكة ========= */
         .game-area { 
             flex: 1; position: relative; overflow: hidden; 
             display: flex; justify-content: center; align-items: center; flex-direction: column;
             background-image: 
                 linear-gradient(var(--grid-color) 1px, transparent 1px),
                 linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
-            background-size: 50px 50px;
+            background-size: 40px 40px;
         }
         
-        .status-text { font-size: 14px; color: var(--text-muted); font-weight: 700; margin-bottom: 5px; z-index: 2; text-transform: uppercase; letter-spacing: 1px; }
-        .multiplier { font-size: 90px; font-weight: 900; z-index: 2; letter-spacing: -2px; text-shadow: 0 0 20px rgba(255,255,255,0.1); }
+        .status-text { font-size: 13px; color: var(--text-muted); font-weight: 700; margin-bottom: 5px; z-index: 2; text-transform: uppercase; letter-spacing: 1px; }
+        .multiplier { font-size: 90px; font-weight: 900; z-index: 2; letter-spacing: -3px; text-shadow: 0 0 30px rgba(255,255,255,0.05); }
 
-        /* الصاروخ ومساره */
-        .rocket-container { position: absolute; bottom: 25%; left: 15%; z-index: 5; display: none; }
-        /* استخدام صورة صاروخ قريبة جداً لـ Epic */
-        .rocket-img { width: 100px; transform: rotate(45deg); filter: drop-shadow(0 10px 10px rgba(0,0,0,0.5)); }
+        /* الصاروخ الفخم والمسار */
+        .rocket-container { position: absolute; bottom: 20%; left: 20%; z-index: 5; display: none; }
+        .rocket-img { width: 110px; filter: drop-shadow(0 10px 15px rgba(0,0,0,0.6)); transform: rotate(45deg); }
+        .flying-shake { animation: shake 0.1s infinite alternate; }
+        @keyframes shake { 0% { transform: translate(0, 0) rotate(45deg); } 100% { transform: translate(-2px, 2px) rotate(45deg); } }
         
         .trail-svg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none; }
-        .trail-path { fill: none; stroke: var(--danger-red); stroke-width: 5; stroke-linecap: round; filter: drop-shadow(0 0 8px rgba(255, 68, 68, 0.8)); }
+        .trail-path { fill: none; stroke: var(--danger); stroke-width: 6; stroke-linecap: round; filter: drop-shadow(0 0 10px rgba(255, 59, 48, 0.8)); }
 
-        /* لوحة التحكم السفلية */
-        .controls { background: var(--bg-color); padding: 20px; display: flex; flex-direction: column; border-top: 1px solid rgba(255,255,255,0.05); }
+        /* ========= لوحة التحكم والرهان ========= */
+        .controls { background: var(--panel-bg); padding: 20px; display: flex; flex-direction: column; border-top: 1px solid rgba(255,255,255,0.05); flex-shrink: 0; }
         
-        .input-box { background: #1a1d27; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; margin-bottom: 15px; border: 1px solid rgba(255,255,255,0.05); }
-        .input-box input { background: transparent; border: none; color: white; font-size: 20px; font-weight: bold; outline: none; width: 100%; text-align: right; }
+        .input-wrapper { background: #0b0e14; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; margin-bottom: 15px; border: 1px solid rgba(255,255,255,0.05); }
+        .input-wrapper input { background: transparent; border: none; color: white; font-size: 20px; font-weight: bold; outline: none; width: 100%; text-align: right; }
         
-        .btn-action { width: 100%; padding: 20px; border-radius: 12px; font-size: 22px; font-weight: 900; color: white; border: none; cursor: pointer; transition: transform 0.1s; background: var(--primary-blue); }
-        .btn-action:active { transform: scale(0.97); }
-        .btn-action.cancel { background: var(--danger-red); }
-        .btn-action.cashout { background: #00c851; color: black; }
+        .btn-bet { width: 100%; padding: 18px; border-radius: 12px; font-size: 22px; font-weight: 900; color: white; border: none; background: var(--primary-btn); cursor: pointer; transition: 0.1s; }
+        .btn-bet:active { transform: scale(0.98); }
+        .btn-bet.cancel { background: var(--danger); }
+        .btn-bet.cashout { background: var(--success); color: black; }
 
-        /* قائمة رهان اللاعب (أنت فقط) */
-        .players-list { margin-top: 20px; flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
-        .player-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 15px; background: rgba(255,255,255,0.02); border-radius: 10px; border: 1px solid rgba(255,255,255,0.05); }
+        /* ========= قائمة اللاعبين ========= */
+        .players-list { margin-top: 15px; max-height: 150px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
+        .players-list::-webkit-scrollbar { display: none; }
+        .player-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; background: rgba(255,255,255,0.02); border-radius: 10px; border: 1px solid rgba(255,255,255,0.03); }
         .player-info { display: flex; align-items: center; gap: 10px; }
-        .p-name { font-size: 15px; font-weight: bold; }
-        .p-bet { font-size: 13px; color: var(--text-muted); }
-        .p-profit { font-weight: 900; font-size: 16px; }
+        .p-avatar { width: 32px; height: 32px; border-radius: 50%; background: #333; }
+        .p-details { display: flex; flex-direction: column; }
+        .p-name { font-size: 14px; font-weight: bold; }
+        .p-bet { font-size: 12px; color: var(--text-muted); }
+        .p-profit { font-weight: 900; font-size: 15px; }
         
-        .player-row.cashed { background: rgba(0, 200, 81, 0.1); border-color: rgba(0, 200, 81, 0.3); }
-        .player-row.cashed .p-profit { color: #00c851; }
-        .player-row.crashed { opacity: 0.5; }
-        .player-row.crashed .p-profit { color: var(--danger-red); }
+        .player-row.cashed { background: rgba(0, 200, 81, 0.1); border-color: rgba(0, 200, 81, 0.2); }
+        .player-row.cashed .p-profit { color: var(--success); }
+        .player-row.crashed { opacity: 0.4; }
+        .player-row.crashed .p-profit { color: var(--danger); }
+
+        /* ========= قائمة المطور (Dev Panel) ========= */
+        .dev-btn { position: absolute; top: 15px; left: 15px; background: transparent; border: none; font-size: 20px; cursor: pointer; z-index: 1000; opacity: 0.5; }
+        .dev-panel { position: absolute; top: 50px; left: 15px; background: #222; border: 1px solid #444; border-radius: 10px; padding: 15px; z-index: 1000; display: none; box-shadow: 0 10px 30px rgba(0,0,0,0.8); }
+        .dev-panel input { width: 100%; padding: 8px; margin-bottom: 10px; background: #111; border: 1px solid #333; color: white; border-radius: 5px; }
+        .dev-panel button { width: 100%; padding: 8px; background: var(--success); border: none; font-weight: bold; border-radius: 5px; cursor: pointer; margin-bottom: 5px; }
 
     </style>
 </head>
 <body>
 
+    <button class="dev-btn" onclick="toggleDevPanel()">⚙️</button>
+    <div class="dev-panel" id="dev-panel">
+        <h4 style="margin-bottom: 10px; color: gold;">👨‍💻 Dev Panel</h4>
+        <button onclick="addDevBalance()">إضافة 1000 💎</button>
+        <input type="number" id="force-crash" placeholder="أجبر الكراش (مثال: 5.00)">
+        <button onclick="clearData()" style="background: var(--danger); color: white;">تصفير البيانات</button>
+    </div>
+
     <div class="header">
-        <div class="balance"><span id="balance">100.00</span> 💎</div>
-        <div class="online">online 142 <div class="dot"></div></div>
+        <div class="balance-badge"><span id="balance">100.00</span> 💎</div>
+        <div class="online-badge">online <span id="online-count">142</span> <div class="dot"></div></div>
     </div>
 
     <div class="game-area" id="game-area">
@@ -87,17 +107,17 @@
         <div class="multiplier" id="multi-text">5</div>
         
         <div class="rocket-container" id="rocket">
-            <img src="https://cdn-icons-png.flaticon.com/512/3256/3256114.png" class="rocket-img" id="rocket-img">
+            <img src="https://cdn-icons-png.flaticon.com/512/1356/1356479.png" class="rocket-img" id="rocket-img">
         </div>
     </div>
 
     <div class="controls">
-        <div class="input-box">
-            <span style="color:var(--text-main); font-weight:bold;">💎</span>
+        <div class="input-wrapper">
             <input type="number" id="bet-input" value="1.00" step="0.5" min="0.5">
+            <span style="color:var(--text-main); font-weight:bold;">💎</span>
         </div>
 
-        <button class="btn-action" id="action-btn" onclick="handleAction()">Place bet</button>
+        <button class="btn-bet" id="action-btn" onclick="handleAction()">Place bet</button>
 
         <div class="players-list" id="players-list">
             </div>
@@ -108,23 +128,28 @@
         try { window.Telegram.WebApp.expand(); } catch(e) {}
 
         // ================= نظام الحفظ (الرصيد) =================
-        let balance = parseFloat(localStorage.getItem('epic_balance'));
+        let balance = parseFloat(localStorage.getItem('epic_real_balance'));
         if (isNaN(balance)) balance = 100.00; 
         
         function updateBalance(amount) {
             balance += amount;
             document.getElementById('balance').innerText = balance.toFixed(2);
-            localStorage.setItem('epic_balance', balance); 
+            localStorage.setItem('epic_real_balance', balance); 
         }
         updateBalance(0);
 
-        // ================= محرك اللعبة (يعتمد على الوقت الفعلي لمنع التوقف) =================
+        // ================= لوحة المطور =================
+        function toggleDevPanel() {
+            let panel = document.getElementById('dev-panel');
+            panel.style.display = panel.style.display === 'block' ? 'none' : 'block';
+        }
+        function addDevBalance() { updateBalance(1000); alert("تمت إضافة 1000 💎"); }
+        function clearData() { localStorage.removeItem('epic_real_balance'); location.reload(); }
+
+        // ================= محرك اللعبة الواقعي =================
         let gameState = 'waiting'; 
         let crashPoint = 1.00;
         let startTime = 0;
-        let roundDurationMs = 0;
-        
-        // سرعة نمو المضاعف (نفس خوارزمية الكازينو الحقيقية)
         const GROWTH_RATE = 0.00006; 
 
         let betPlaced = false;
@@ -141,27 +166,33 @@
         const playersList = document.getElementById('players-list');
 
         function generateCrashPoint() {
+            // التحقق من لوحة المطور أولاً
+            let forceVal = document.getElementById('force-crash').value;
+            if(forceVal && parseFloat(forceVal) > 1.0) {
+                document.getElementById('force-crash').value = ''; // تصفير الحقل بعد الاستخدام
+                return parseFloat(forceVal);
+            }
+            // خوارزمية طبيعية
             if (Math.random() < 0.05) return 1.00;
             return Math.max(1.01, (0.99 / Math.random()));
         }
 
-        // هذه الدالة تعمل باستمرار، حتى لو خرجت من التطبيق ورجعت، ستحسب الوقت الفعلي!
         function gameLoop() {
             let now = Date.now();
 
             if (gameState === 'waiting') {
                 let timeLeft = Math.ceil((startTime - now) / 1000);
                 if (timeLeft <= 0) {
-                    // انطلاق
                     gameState = 'flying';
                     statusText.innerText = "CURRENT PAYOUT";
                     rocket.style.display = 'block';
-                    rocketImg.src = "https://cdn-icons-png.flaticon.com/512/3256/3256114.png";
+                    rocketImg.src = "https://cdn-icons-png.flaticon.com/512/1356/1356479.png";
+                    rocketImg.classList.add('flying-shake'); // تشغيل الاهتزاز
                     
                     if (betPlaced && !isCashedOut) {
-                        actionBtn.innerText = "Cashout"; actionBtn.className = "btn-action cashout";
+                        actionBtn.innerText = "Cashout"; actionBtn.className = "btn-bet cashout";
                     } else if (!betPlaced && queuedBet === 0) {
-                        actionBtn.innerText = "Place bet"; actionBtn.className = "btn-action";
+                        actionBtn.innerText = "Place bet"; actionBtn.className = "btn-bet";
                     }
                 } else {
                     multiText.innerText = timeLeft;
@@ -169,54 +200,47 @@
             } 
             else if (gameState === 'flying') {
                 let elapsedMs = now - startTime;
-                
-                // حساب المضاعف بناءً على الوقت المنقضي
                 let currentMulti = Math.exp(GROWTH_RATE * elapsedMs);
 
                 if (currentMulti >= crashPoint) {
-                    // كراش!
                     gameState = 'crashed';
                     multiText.innerText = crashPoint.toFixed(2) + "x";
-                    multiText.style.color = 'var(--danger-red)';
+                    multiText.style.color = 'var(--danger)';
                     statusText.innerText = "CRASHED AT";
-                    rocketImg.src = "https://cdn-icons-png.flaticon.com/512/1046/1046784.png"; // انفجار
+                    rocketImg.src = "https://cdn-icons-png.flaticon.com/512/1046/1046784.png"; // صورة الانفجار
+                    rocketImg.classList.remove('flying-shake');
                     
                     if (betPlaced && !isCashedOut) {
-                        actionBtn.innerText = "Place bet"; actionBtn.className = "btn-action";
+                        actionBtn.innerText = "Place bet"; actionBtn.className = "btn-bet";
                         betPlaced = false;
                         let myRow = document.getElementById('my_row');
-                        if(myRow) { myRow.classList.add('crashed'); document.getElementById('my_profit').innerText = "0.00"; }
-                    } else if (betPlaced && isCashedOut) {
-                        betPlaced = false;
+                        if(myRow) { myRow.classList.add('crashed'); document.getElementById('my_profit').innerText = `-${betAmount.toFixed(2)}`; }
                     }
 
                     setTimeout(startNewRound, 3000);
                 } else {
-                    // تحديث الشاشة أثناء الطيران
                     multiText.innerText = currentMulti.toFixed(2) + "x";
                     
-                    // تحديث رصيدي الحي إذا لم أسحب
                     if (betPlaced && !isCashedOut) {
                         document.getElementById('my_profit').innerText = (betAmount * currentMulti).toFixed(2) + " 💎";
                     }
 
-                    // حركة الصاروخ والخط
+                    // حركة الصاروخ والخط الأحمر المطابقة لـ Epic
                     let startX = window.innerWidth * 0.15;
-                    let startY = document.getElementById('game-area').offsetHeight * 0.7;
-                    let progress = elapsedMs / 1000; // الثواني المنقضية
+                    let startY = document.getElementById('game-area').offsetHeight * 0.8;
+                    let progress = elapsedMs / 1000; 
                     
-                    let currentX = startX + (progress * 50);
-                    let currentY = startY - (Math.pow(progress, 1.5) * 15);
+                    let currentX = startX + (progress * 40);
+                    let currentY = startY - (Math.pow(progress, 1.5) * 12);
                     
                     if(currentY < 40) currentY = 40; 
-                    if(currentX > window.innerWidth * 0.8) currentX = window.innerWidth * 0.8;
+                    if(currentX > window.innerWidth * 0.75) currentX = window.innerWidth * 0.75;
 
                     rocket.style.transform = `translate(${currentX - startX}px, ${currentY - startY}px)`;
-                    flightPath.setAttribute('d', `M ${startX+20} ${startY+10} Q ${currentX} ${startY} ${currentX+20} ${currentY+40}`);
+                    flightPath.setAttribute('d', `M ${startX+20} ${startY+10} Q ${currentX} ${startY+20} ${currentX+30} ${currentY+40}`);
                 }
             }
 
-            // استمرار الحلقة
             if(gameState !== 'crashed') {
                 requestAnimationFrame(gameLoop);
             }
@@ -225,22 +249,21 @@
         function startNewRound() {
             gameState = 'waiting';
             crashPoint = generateCrashPoint();
-            startTime = Date.now() + 5000; // بعد 5 ثواني
+            startTime = Date.now() + 5000; 
             
             rocket.style.display = 'none';
             flightPath.setAttribute('d', '');
             multiText.style.color = '#fff';
             statusText.innerText = "NEXT ROUND IN";
 
-            playersList.innerHTML = ''; // تنظيف القائمة
+            playersList.innerHTML = ''; 
 
-            // معالجة الرهان المعلق
             if (queuedBet > 0) {
                 betPlaced = true; betAmount = queuedBet; queuedBet = 0; isCashedOut = false;
-                actionBtn.innerText = "Cancel"; actionBtn.className = "btn-action cancel";
+                actionBtn.innerText = "Cancel"; actionBtn.className = "btn-bet cancel";
                 addMyRow(betAmount);
             } else if (!betPlaced) {
-                actionBtn.innerText = "Place bet"; actionBtn.className = "btn-action";
+                actionBtn.innerText = "Place bet"; actionBtn.className = "btn-bet";
             }
 
             requestAnimationFrame(gameLoop);
@@ -248,10 +271,13 @@
 
         function addMyRow(amount) {
             playersList.innerHTML = `
-                <div class="player-row" id="my_row">
+                <div class="player-row" id="my_row" style="border-color: var(--primary-btn);">
                     <div class="player-info">
-                        <div class="p-name">YOU</div>
-                        <div class="p-bet">${amount.toFixed(2)} 💎</div>
+                        <div class="p-avatar" style="background: var(--primary-btn);"></div>
+                        <div class="p-details">
+                            <div class="p-name">YOU</div>
+                            <div class="p-bet">${amount.toFixed(2)} 💎</div>
+                        </div>
                     </div>
                     <div class="p-profit" id="my_profit">Waiting</div>
                 </div>
@@ -262,31 +288,30 @@
         function handleAction() {
             if (queuedBet > 0) {
                 updateBalance(queuedBet); queuedBet = 0;
-                actionBtn.innerText = "Place bet"; actionBtn.className = "btn-action";
+                actionBtn.innerText = "Place bet"; actionBtn.className = "btn-bet";
             }
             else if (gameState === 'waiting') {
                 if (betPlaced) {
                     updateBalance(betAmount); betPlaced = false; betAmount = 0;
-                    actionBtn.innerText = "Place bet"; actionBtn.className = "btn-action";
+                    actionBtn.innerText = "Place bet"; actionBtn.className = "btn-bet";
                     playersList.innerHTML = '';
                 } else {
                     let amt = parseFloat(document.getElementById('bet-input').value);
                     if(amt > balance) { alert("رصيد غير كافٍ!"); return; }
                     updateBalance(-amt);
                     betPlaced = true; betAmount = amt; isCashedOut = false;
-                    actionBtn.innerText = "Cancel"; actionBtn.className = "btn-action cancel";
+                    actionBtn.innerText = "Cancel"; actionBtn.className = "btn-bet cancel";
                     addMyRow(amt);
                 }
             } 
             else if (gameState === 'flying') {
                 if (betPlaced && !isCashedOut) {
-                    // سحب
                     isCashedOut = true;
                     let currentMulti = Math.exp(GROWTH_RATE * (Date.now() - startTime));
                     let win = betAmount * currentMulti;
                     updateBalance(win);
                     
-                    actionBtn.innerText = "Place bet"; actionBtn.className = "btn-action";
+                    actionBtn.innerText = "Place bet"; actionBtn.className = "btn-bet";
                     
                     let myRow = document.getElementById('my_row');
                     if(myRow) {
@@ -294,12 +319,11 @@
                         document.getElementById('my_profit').innerText = `${win.toFixed(2)} 💎`;
                     }
                 } else {
-                    // رهان معلق للجولة القادمة
                     let amt = parseFloat(document.getElementById('bet-input').value);
                     if(amt > balance) return;
                     updateBalance(-amt);
                     queuedBet = amt;
-                    actionBtn.innerText = "Cancel (Next Round)"; actionBtn.className = "btn-action cancel";
+                    actionBtn.innerText = "Cancel (Next Round)"; actionBtn.className = "btn-bet cancel";
                 }
             }
             else if (gameState === 'crashed') {
@@ -307,11 +331,11 @@
                 if(amt > balance) return;
                 updateBalance(-amt);
                 queuedBet = amt;
-                actionBtn.innerText = "Cancel (Next Round)"; actionBtn.className = "btn-action cancel";
+                actionBtn.innerText = "Cancel (Next Round)"; actionBtn.className = "btn-bet cancel";
             }
         }
 
-        // تشغيل مباشر
+        // تشغيل
         startNewRound();
 
     </script>
