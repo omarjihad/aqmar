@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>مساعد الشطرنج - الإصدار الأسطوري</title>
+    <title>مساعد الشطرنج - الإصدار الأسطوري ♚</title>
     <link rel="stylesheet" href="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css">
     <style>
         /* التصميم الاحترافي والملحمي */
@@ -22,11 +22,11 @@
             background-color: #0d0d12; z-index: 2000;
             display: flex; flex-direction: column; justify-content: center; align-items: center;
         }
-        .setup-box { background: #1a1a24; padding: 25px; border-radius: 15px; border: 1px solid #00ffcc; width: 85%; max-width: 400px; }
+        .setup-box { background: #1a1a24; padding: 25px; border-radius: 15px; border: 1px solid #00ffcc; width: 85%; max-width: 400px; box-shadow: 0 0 30px rgba(0, 255, 204, 0.1); }
         .option-group { margin-bottom: 20px; }
         .option-label { display: block; margin-bottom: 10px; color: #00ffcc; font-weight: bold; }
         
-        select { background: #0d0d12; color: #fff; border: 1px solid #00ffcc; padding: 10px; border-radius: 5px; width: 100%; }
+        select { background: #0d0d12; color: #fff; border: 1px solid #00ffcc; padding: 10px; border-radius: 5px; width: 100%; font-size: 1.1em;}
 
         /* حاوية الرقعة */
         #board-container {
@@ -35,7 +35,7 @@
             border: 2px solid #00ffcc; border-radius: 8px; padding: 5px; background-color: #1a1a24;
         }
 
-        /* ألوان المربعات */
+        /* ألوان المربعات لتناسب الثيم */
         .white-1e1d7 { background-color: #dee3e6; }
         .black-3c85d { background-color: #8a96a3; }
 
@@ -85,7 +85,7 @@
                     <option value="12">عالمي (هجوم كاسح) 🥇</option>
                 </select>
             </div>
-            <button class="btn" style="width: 100%; padding: 15px;" onclick="startGame()">ابدأ اللعبة الآن 🚀</button>
+            <button class="btn" style="width: 100%; padding: 15px; font-size: 1.1em;" onclick="startGame()">ابدأ اللعبة الآن 🚀</button>
         </div>
     </div>
 
@@ -200,7 +200,7 @@
             document.getElementById('setup-screen').style.display = 'flex';
         }
 
-        // نظام الضغط على المربعات لتحديد القطع وتحريكها (حركة الخصم)
+        // نظام الضغط على المربعات لتحديد القطع وتحريكها (حركتك أو حركة الخصم)
         $('#board').on('click', '.square-55d63', function() {
             var square = $(this).attr('data-square');
             var piece = game.get(square);
@@ -227,7 +227,7 @@
             } else { selectedSquare = null; }
         });
 
-        // نظام الذكاء الاصطناعي مع إعادة المحاولة التلقائية (Auto-Retry)
+        // نظام الذكاء الاصطناعي مع إعادة المحاولة التلقائية ومعالجة الهجوم
         function getBestMove(retries = 3) {
             var fen = game.fen();
             document.getElementById('status-display').innerText = "جاري جلب النقلة بسرعة البرق... ⚡";
@@ -246,23 +246,30 @@
                 return response.json();
             })
             .then(data => {
-                if(data.move) {
-                    let bestMoveStr = data.move; 
-                    let fromSq = bestMoveStr.substring(0, 2);
-                    let toSq = bestMoveStr.substring(2, 4);
-                    let promo = bestMoveStr.length > 4 ? bestMoveStr.charAt(4) : 'q';
+                let bestMoveStr = data.move || data.lan || data.san; 
+                
+                if(bestMoveStr) {
+                    // الدالة الذكية اللي تحل مشكلة الهجوم (أكل القطع)
+                    let moveObj = game.move(bestMoveStr, { sloppy: true });
                     
-                    let pieceMoved = game.get(fromSq);
-                    game.move({ from: fromSq, to: toSq, promotion: promo });
-                    redoStack = [];
+                    if (moveObj) {
+                        redoStack = []; 
+                        board.position(game.fen());
+                        removeHighlights();
+                        $(`.square-${moveObj.from}`).addClass('highlight-ai-from');
+                        $(`.square-${moveObj.to}`).addClass('highlight-ai-to');
 
-                    board.position(game.fen());
-                    removeHighlights();
-                    $(`.square-${fromSq}`).addClass('highlight-ai-from');
-                    $(`.square-${toSq}`).addClass('highlight-ai-to');
-
-                    let desc = `✅ نقلة ${difficulty === 12 ? 'عالمية' : 'ذكية'}: الـ <b>${pieceNames[pieceMoved.type]}</b> إلى <b>${toSq}</b>`;
-                    updateGameStatus(desc);
+                        let desc = "";
+                        if (moveObj.captured) {
+                            desc = `⚔️ هجوم ذكي: الـ <b>${pieceNames[moveObj.piece]}</b> أكل في <b>${moveObj.to}</b>`;
+                        } else {
+                            desc = `✅ نقلة ${difficulty === 12 ? 'عالمية' : 'ذكية'}: الـ <b>${pieceNames[moveObj.piece]}</b> إلى <b>${moveObj.to}</b>`;
+                        }
+                        
+                        updateGameStatus(desc);
+                    } else {
+                        throw new Error("فشل المتصفح في قراءة الحركة");
+                    }
                 } else {
                     throw new Error("لم يتم العثور على نقلة");
                 }
@@ -272,7 +279,7 @@
                     document.getElementById('status-display').innerText = `صار ضغط على السيرفر، جاري المحاولة من جديد... 🔄`;
                     setTimeout(() => getBestMove(retries - 1), 1000); 
                 } else {
-                    document.getElementById('status-display').innerText = "فشل الاتصال بالسيرفر بعد عدة محاولات، اضغط الزر مرة ثانية ⚠️";
+                    document.getElementById('status-display').innerText = "فشل الاتصال بالسيرفر، اضغط الزر مرة ثانية ⚠️";
                     $('#best-move-btn').show();
                 }
             });
