@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>مساعد الشطرنج - الإصدار الاحترافي</title>
+    <title>مساعد الشطرنج - الإصدار السريع</title>
     <link rel="stylesheet" href="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css">
     <style>
         body {
@@ -15,7 +15,6 @@
         }
         h2 { color: #00ffcc; text-shadow: 0 0 10px #00ffcc; }
         
-        /* شاشة الإعدادات */
         #setup-screen {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background-color: #0d0d12; z-index: 2000;
@@ -46,7 +45,6 @@
             min-height: 60px; padding: 10px; background: rgba(255, 255, 255, 0.05); border-radius: 10px;
         }
 
-        /* تمييز الحركات */
         .highlight-ai-from { background-color: rgba(255, 255, 0, 0.4) !important; }
         .highlight-ai-to { background-color: rgba(0, 255, 204, 0.5) !important; }
         .highlight-selected { background-color: rgba(0, 255, 204, 0.4) !important; }
@@ -72,9 +70,9 @@
             <div class="option-group">
                 <span class="option-label">مستوى الصعوبة (الذكاء):</span>
                 <select id="select-diff">
-                    <option value="4">جيد (مبتدئ) 🥉</option>
-                    <option value="9">متوسط (لاعب محترف) 🥈</option>
-                    <option value="16">عالمي (Grandmaster) 🥇</option>
+                    <option value="5">جيد (سريع جداً) 🥉</option>
+                    <option value="9">متوسط (أداء متزن) 🥈</option>
+                    <option value="12">عالمي (هجوم كاسح) 🥇</option>
                 </select>
             </div>
             <button class="btn" style="width: 100%; padding: 15px;" onclick="startGame()">ابدأ اللعبة الآن 🚀</button>
@@ -86,7 +84,7 @@
     <div id="status-display">انتظار بدء اللعبة...</div>
 
     <div style="margin-top: 10px;">
-        <button id="best-move-btn" class="btn" onclick="getBestMove()">أوجد أفضل نقلة 🧠</button>
+        <button id="best-move-btn" class="btn" onclick="getBestMove()">أوجد أفضل نقلة ⚡</button>
         <button class="btn" onclick="undoMove()">↩️ رجوع</button>
         <button class="btn btn-redo" onclick="redoMove()">تقديم ↪️</button>
         <button class="btn" onclick="confirmReset()">إعادة ♻️</button>
@@ -99,7 +97,7 @@
     <script>
         var board = null;
         var game = new Chess();
-        var redoStack = []; // مخزن لحفظ الحركات اللي تراجعنا عنها
+        var redoStack = []; 
         var selectedSquare = null;
         var playerTeam = 'w';
         var difficulty = 9;
@@ -115,7 +113,7 @@
 
         function startGame() {
             playerTeam = document.getElementById('select-team').value;
-            difficulty = document.getElementById('select-diff').value;
+            difficulty = parseInt(document.getElementById('select-diff').value);
             document.getElementById('setup-screen').style.display = 'none';
             board.orientation(playerTeam === 'b' ? 'black' : 'white');
             updateGameStatus();
@@ -132,7 +130,7 @@
             }
 
             let turnText = game.turn() === playerTeam ? 
-                "<span style='color:#00ffcc'>دورك الآن.. اضغط على الزر</span>" : 
+                "<span style='color:#00ffcc'>دورك الآن.. اضغط الزر للحركة</span>" : 
                 "<span style='color:#ff0055'>بانتظار حركة الخصم... ⏳</span>";
             
             document.getElementById('status-display').innerHTML = (moveDesc ? moveDesc + "<br>" : "") + turnText;
@@ -148,7 +146,7 @@
         function undoMove() {
             let move = game.undo();
             if (move) {
-                redoStack.push(move); // حفظ الحركة المحذوفة للتقديم
+                redoStack.push(move);
                 board.position(game.fen());
                 removeHighlights();
                 updateGameStatus("تم الرجوع للخلف ↩️");
@@ -166,7 +164,6 @@
         }
 
         function confirmReset() {
-            // إذا كانت اللعبة في بدايتها لا داعي للسؤال
             if (game.history().length === 0) {
                 resetGame();
                 return;
@@ -184,7 +181,6 @@
             document.getElementById('setup-screen').style.display = 'flex';
         }
 
-        // التعامل مع الضغط اليدوي
         $('#board').on('click', '.square-55d63', function() {
             var square = $(this).attr('data-square');
             var piece = game.get(square);
@@ -192,7 +188,7 @@
             if (selectedSquare) {
                 var move = game.move({ from: selectedSquare, to: square, promotion: 'q' });
                 if (move) {
-                    redoStack = []; // عند لعب حركة جديدة يدوياً نمسح الـ Redo
+                    redoStack = []; 
                     board.position(game.fen());
                     removeHighlights();
                     selectedSquare = null;
@@ -211,32 +207,50 @@
             } else { selectedSquare = null; }
         });
 
+        // تم تحديث دالة الذكاء الاصطناعي لتعمل بصاروخية باستخدام API جديد
         function getBestMove() {
             var fen = game.fen();
-            document.getElementById('status-display').innerText = "جاري التفكير بالمستوى المطلوب... 🧠";
+            document.getElementById('status-display').innerText = "جاري جلب النقلة بسرعة البرق... ⚡";
             $('#best-move-btn').hide();
 
-            fetch(`https://stockfish.online/api/s/v2.php?fen=${fen}&depth=${difficulty}`)
-                .then(response => response.json())
-                .then(data => {
-                    if(data.success) {
-                        let bestMoveStr = data.bestmove.split(" ")[1];
-                        let fromSq = bestMoveStr.substring(0, 2);
-                        let toSq = bestMoveStr.substring(2, 4);
-                        
-                        let pieceMoved = game.get(fromSq);
-                        game.move({ from: fromSq, to: toSq, promotion: 'q' });
-                        redoStack = [];
+            // استخدام سيرفر chess-api السريع جداً
+            fetch('https://chess-api.com/v1', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    fen: fen,
+                    depth: difficulty // 5 أو 9 أو 12
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if(data.move) {
+                    let bestMoveStr = data.move; 
+                    let fromSq = bestMoveStr.substring(0, 2);
+                    let toSq = bestMoveStr.substring(2, 4);
+                    let promo = bestMoveStr.length > 4 ? bestMoveStr.charAt(4) : 'q';
+                    
+                    let pieceMoved = game.get(fromSq);
+                    game.move({ from: fromSq, to: toSq, promotion: promo });
+                    redoStack = [];
 
-                        board.position(game.fen());
-                        removeHighlights();
-                        $(`.square-${fromSq}`).addClass('highlight-ai-from');
-                        $(`.square-${toSq}`).addClass('highlight-ai-to');
+                    board.position(game.fen());
+                    removeHighlights();
+                    $(`.square-${fromSq}`).addClass('highlight-ai-from');
+                    $(`.square-${toSq}`).addClass('highlight-ai-to');
 
-                        let desc = `✅ نقلة ${difficulty > 10 ? 'عالمية' : 'ذكية'}: الـ <b>${pieceNames[pieceMoved.type]}</b> إلى <b>${toSq}</b>`;
-                        updateGameStatus(desc);
-                    }
-                });
+                    let desc = `✅ نقلة ${difficulty === 12 ? 'عالمية' : 'ذكية'}: الـ <b>${pieceNames[pieceMoved.type]}</b> إلى <b>${toSq}</b>`;
+                    updateGameStatus(desc);
+                } else {
+                    document.getElementById('status-display').innerText = "حدث خطأ بالتحليل، حاول مرة أخرى.";
+                    $('#best-move-btn').show();
+                }
+            })
+            .catch(err => {
+                // إذا صار أي خطأ بالنت، يرجعلك الزر حتى تدوسه من جديد بدون ما يعلق
+                document.getElementById('status-display').innerText = "فشل الاتصال، اضغط الزر مرة ثانية 🔄";
+                $('#best-move-btn').show();
+            });
         }
     </script>
 </body>
