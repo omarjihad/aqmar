@@ -6,22 +6,116 @@
     <title>محلل الشطرنج الذكي</title>
     <link rel="stylesheet" href="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css">
     <style>
-        body { font-family: Arial, sans-serif; text-align: center; background-color: #1e1e1e; color: white; padding: 20px; }
-        #board { width: 100%; max-width: 400px; margin: 0 auto 20px auto; }
-        .btn { padding: 10px 20px; margin: 5px; background: #0088cc; color: white; border: none; border-radius: 5px; cursor: pointer; }
-        #best-move-display { margin-top: 20px; font-size: 1.2em; font-weight: bold; color: #4CAF50; }
+        /* التصميم الاحترافي والملحمي */
+        body {
+            background-color: #0d0d12;
+            color: #e0e0e0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            text-align: center;
+            margin: 0;
+            padding: 20px;
+        }
+        h2 {
+            color: #00ffcc;
+            text-shadow: 0 0 10px #00ffcc;
+            margin-bottom: 20px;
+            font-weight: 800;
+            letter-spacing: 1px;
+        }
+        #board-container {
+            width: 100%;
+            max-width: 400px;
+            margin: 0 auto 20px auto;
+            box-shadow: 0 0 25px rgba(0, 255, 204, 0.2);
+            border: 2px solid #00ffcc;
+            border-radius: 4px;
+            padding: 4px;
+            background-color: #1a1a24;
+        }
+        
+        /* تلوين الرقعة لتناسب الثيم المظلم الاحترافي */
+        .white-1e1d7 { background-color: #cfd8e3; }
+        .black-3c85d { background-color: #5c748a; }
+
+        .btn {
+            background-color: transparent;
+            color: #00ffcc;
+            border: 1px solid #00ffcc;
+            padding: 10px 15px;
+            margin: 5px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+        }
+        .btn:hover {
+            background-color: #00ffcc;
+            color: #0d0d12;
+            box-shadow: 0 0 15px #00ffcc;
+        }
+        #best-move-display {
+            margin-top: 20px;
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #ff0055;
+            text-shadow: 0 0 10px rgba(255, 0, 85, 0.6);
+            height: 30px;
+        }
+
+        /* تنسيق علامات الحركات الممكنة (نقاط دوائر) */
+        .highlight-move { position: relative; }
+        .highlight-move::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 28%;
+            height: 28%;
+            background-color: rgba(0, 255, 204, 0.7);
+            border-radius: 50%;
+            box-shadow: 0 0 8px #00ffcc;
+            pointer-events: none; /* حتى ما تمنع الضغط على المربع */
+        }
+
+        /* تنسيق علامة الهجوم (لون أحمر على قطع الخصم) */
+        .highlight-capture::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 80%;
+            height: 80%;
+            background-color: transparent;
+            border: 4px solid rgba(255, 0, 85, 0.8);
+            border-radius: 50%;
+            box-shadow: inset 0 0 10px #ff0055, 0 0 10px #ff0055;
+            pointer-events: none;
+        }
+
+        /* تمييز المربع المحدد حالياً */
+        .highlight-selected {
+            background-color: rgba(0, 255, 204, 0.4) !important;
+        }
     </style>
 </head>
 <body>
 
-    <h2>محلل الشطرنج ♟️</h2>
-    <div id="board"></div>
+    <h2>♟️ محلل الشطرنج الذكي</h2>
     
-    <button class="btn" onclick="getBestMove()">أوجد أفضل نقلة للذكاء الاصطناعي 🧠</button>
-    <button class="btn" onclick="flipBoard()">قلب الرقعة 🔄</button>
-    <button class="btn" onclick="resetBoard()">إعادة اللعبة ♻️</button>
+    <div id="board-container">
+        <div id="board"></div>
+    </div>
+    
+    <div>
+        <button class="btn" onclick="getBestMove()">أوجد أفضل نقلة 🧠</button>
+        <button class="btn" onclick="flipBoard()">قلب الرقعة 🔄</button>
+        <button class="btn" onclick="resetBoard()">إعادة ♻️</button>
+    </div>
 
-    <div id="best-move-display">العب نقلتك ثم اضغط على الزر لمعرفة أفضل رد!</div>
+    <div id="best-move-display">اضغط على القطعة لتحديدها ثم اختر المربع</div>
 
     <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
     <script src="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.js"></script>
@@ -30,38 +124,83 @@
     <script>
         var board = null;
         var game = new Chess();
+        var selectedSquare = null; // لحفظ المربع اللي ضغطت عليه
 
-        // إعدادات الرقعة
+        // إعدادات الرقعة (ألغينا السحب والإفلات drag)
         var config = {
-            draggable: true,
+            draggable: false, // تم إيقاف السحب لتمكين نظام الضغط
             position: 'start',
-            onDrop: handleMove
+            pieceTheme: 'https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png' // أشكال القطع الرسمية الواضحة
         };
         board = Chessboard('board', config);
 
-        // وظيفة التعامل مع النقلات (للتأكد أن النقلة قانونية)
-        function handleMove(source, target) {
-            var move = game.move({
-                from: source,
-                to: target,
-                promotion: 'q' // دائماً ترقية لوزير للتبسيط
-            });
-
-            if (move === null) return 'snapback'; // إرجاع القطعة إذا النقلة خطأ
+        // تنظيف كل التحديدات من الرقعة
+        function removeHighlights() {
+            $('#board .square-55d63').removeClass('highlight-move highlight-capture highlight-selected');
         }
 
-        // جلب أفضل نقلة من Stockfish API
-        function getBestMove() {
-            var fen = game.fen(); // أخذ حالة الرقعة الحالية
-            document.getElementById('best-move-display').innerText = "جاري التفكير...";
+        // نظام الضغط على المربعات والقطع (Click to Move)
+        $('#board').on('click', '.square-55d63', function() {
+            var square = $(this).attr('data-square');
+            var piece = game.get(square);
 
-            // استخدام API مجاني لمحرك Stockfish
+            // إذا كنت محدد قطعة مسبقاً، وحالياً ضغطت على مربع جديد للتحرك
+            if (selectedSquare) {
+                var moves = game.moves({ square: selectedSquare, verbose: true });
+                var isLegalMove = moves.find(m => m.to === square);
+
+                if (isLegalMove) {
+                    // تنفيذ الحركة
+                    game.move({
+                        from: selectedSquare,
+                        to: square,
+                        promotion: 'q' // ترقية تلقائية للوزير
+                    });
+                    board.position(game.fen(), true); // تحديث شكل الرقعة بانميشن سريع
+                    removeHighlights();
+                    selectedSquare = null;
+                    document.getElementById('best-move-display').innerText = "";
+                    return;
+                }
+            }
+
+            // إذا ضغطت على قطعة خاصة بيك لتحديدها
+            removeHighlights();
+            if (piece && piece.color === game.turn()) {
+                selectedSquare = square;
+                $(this).addClass('highlight-selected');
+                
+                // جلب الحركات المسموحة ورسم النقاط
+                var moves = game.moves({ square: square, verbose: true });
+                moves.forEach(function(m) {
+                    var $targetSquare = $('#board .square-' + m.to);
+                    if (m.captured) {
+                        $targetSquare.addClass('highlight-capture'); // مربع أحمر إذا اكو هجوم
+                    } else {
+                        $targetSquare.addClass('highlight-move'); // نقطة نيون زرقاء للحركة العادية
+                    }
+                });
+            } else {
+                selectedSquare = null; // إلغاء التحديد إذا ضغطت على مكان فارغ
+            }
+        });
+
+        // جلب أفضل نقلة من محرك ستوكفيش
+        function getBestMove() {
+            if (game.game_over()) {
+                document.getElementById('best-move-display').innerText = "انتهت اللعبة!";
+                return;
+            }
+
+            var fen = game.fen();
+            document.getElementById('best-move-display').innerText = "جاري التحليل المعمق...";
+
             fetch(`https://stockfish.online/api/s/v2.php?fen=${fen}&depth=12`)
                 .then(response => response.json())
                 .then(data => {
                     if(data.success) {
                         let bestMove = data.bestmove.split(" ")[1];
-                        document.getElementById('best-move-display').innerText = "أفضل نقلة هي: " + bestMove;
+                        document.getElementById('best-move-display').innerText = "🔥 أفضل نقلة هي: " + bestMove.toUpperCase();
                     } else {
                         document.getElementById('best-move-display').innerText = "حدث خطأ في التحليل.";
                     }
@@ -71,8 +210,18 @@
                 });
         }
 
-        function flipBoard() { board.flip(); }
-        function resetBoard() { game.reset(); board.start(); document.getElementById('best-move-display').innerText = ""; }
+        function flipBoard() { 
+            board.flip(); 
+            removeHighlights();
+            selectedSquare = null;
+        }
+        function resetBoard() { 
+            game.reset(); 
+            board.start(); 
+            removeHighlights();
+            selectedSquare = null;
+            document.getElementById('best-move-display').innerText = "اضغط على القطعة لتحديدها ثم اختر المربع"; 
+        }
     </script>
 </body>
 </html>
