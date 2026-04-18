@@ -1,1701 +1,309 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>NFT Battle Pro</title>
-  
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-  
-  <script src="https://cdn.tailwindcss.com"></script>
-  
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          fontFamily: {
-            arabic: ['Cairo', 'sans-serif'],
-          }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Rocket Crash - Pro Edition</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@600;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-deep: #08080f;
+            --bg-panel: #161622;
+            --primary: #5d2de2;
+            --success: #00e676;
+            --danger: #ff3b30;
+            --text-main: #ffffff;
+            --text-muted: #8e8e93;
         }
-      }
-    }
-  </script>
-  
-  <style>
-    :root {
-      --bg-primary: #05050a;
-      --bg-secondary: #0a0a12;
-      --bg-card: #0f0f18;
-      --bg-elevated: #15151f;
-      --accent-blue: #0098ea;
-      --accent-purple: #8b5cf6;
-      --accent-gold: #fbbf24;
-      --accent-green: #22c55e;
-      --accent-red: #ef4444;
-      --accent-cyan: #06b6d4;
-      --accent-pink: #ec4899;
-      --text-primary: #ffffff;
-      --text-secondary: rgba(255, 255, 255, 0.7);
-      --text-muted: rgba(255, 255, 255, 0.4);
-    }
 
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-      -webkit-tap-highlight-color: transparent;
-      -webkit-touch-callout: none;
-      -webkit-user-select: none;
-      user-select: none;
-    }
+        * { box-sizing: border-box; font-family: 'Cairo', sans-serif; margin: 0; padding: 0; user-select: none; }
+        body { background-color: var(--bg-deep); color: var(--text-main); overflow: hidden; display: flex; flex-direction: column; height: 100vh; }
 
-    html, body {
-      height: 100%;
-      overflow: hidden;
-      background: var(--bg-primary);
-      color: var(--text-primary);
-      font-family: 'Cairo', sans-serif;
-    }
+        /* الهيدر العلوي */
+        .header { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; background: rgba(8, 8, 15, 0.8); z-index: 100; }
+        .online-status { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--success); font-weight: bold; }
+        .dot { width: 8px; height: 8px; background: var(--success); border-radius: 50%; box-shadow: 0 0 8px var(--success); animation: blink 1.5s infinite; }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        .balance-box { background: rgba(255,255,255,0.1); padding: 5px 12px; border-radius: 12px; font-weight: 900; font-size: 15px; border: 1px solid rgba(255,255,255,0.2); }
 
-    ::-webkit-scrollbar { display: none; }
+        /* منطقة اللعبة (الفضاء) */
+        .game-area { flex: 1; position: relative; overflow: hidden; display: flex; justify-content: center; align-items: center; flex-direction: column; }
+        .stars { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: url('https://www.transparenttextures.com/patterns/stardust.png'); opacity: 0.3; }
+        
+        .status-text { font-size: 14px; color: var(--text-muted); letter-spacing: 1px; margin-bottom: 10px; z-index: 10; text-transform: uppercase; }
+        .multiplier { font-size: 80px; font-weight: 900; z-index: 10; text-shadow: 0 0 20px rgba(255,255,255,0.1); transition: color 0.2s; }
+        
+        /* الصاروخ والخط */
+        .rocket-container { position: absolute; bottom: 10%; left: 10%; z-index: 5; display: none; transition: transform 0.1s linear; }
+        .rocket-img { width: 80px; transform: rotate(45deg); filter: drop-shadow(0 10px 10px rgba(0,0,0,0.5)); }
+        
+        /* خط الطيران (Trail) */
+        .trail-svg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 4; pointer-events: none; }
+        .trail-path { fill: none; stroke: url(#trailGradient); stroke-width: 4; stroke-linecap: round; filter: drop-shadow(0 0 8px rgba(0, 230, 118, 0.8)); }
 
-    .glass {
-      background: rgba(15, 15, 24, 0.8);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      border: 1px solid rgba(255, 255, 255, 0.05);
-    }
+        /* منطقة التحكم (الأسفل) */
+        .controls { background: var(--bg-panel); padding: 20px; border-top-left-radius: 24px; border-top-right-radius: 24px; z-index: 10; box-shadow: 0 -10px 30px rgba(0,0,0,0.5); }
+        
+        /* اختيار السكنات */
+        .skins-row { display: flex; gap: 10px; margin-bottom: 15px; justify-content: center; }
+        .skin-btn { width: 45px; height: 45px; border-radius: 10px; background: #222; border: 2px solid transparent; padding: 5px; cursor: pointer; transition: 0.2s; }
+        .skin-btn.active { border-color: var(--primary); background: rgba(93, 45, 226, 0.2); }
+        .skin-btn img { width: 100%; height: 100%; object-fit: contain; }
 
-    .glass-strong {
-      background: rgba(10, 10, 18, 0.95);
-      backdrop-filter: blur(30px);
-      -webkit-backdrop-filter: blur(30px);
-      border-top: 1px solid rgba(255, 255, 255, 0.08);
-    }
+        .bet-input-container { display: flex; background: #0c0c14; border-radius: 14px; padding: 6px; margin-bottom: 15px; border: 1px solid #2a2a35; }
+        .bet-input-container button { background: transparent; border: none; color: white; font-size: 24px; width: 50px; cursor: pointer; }
+        .bet-input-container input { flex: 1; background: transparent; border: none; color: white; text-align: center; font-size: 20px; font-weight: 900; outline: none; }
 
-    @keyframes loading-pulse {
-      0%, 100% { opacity: 1; transform: scale(1); }
-      50% { opacity: 0.5; transform: scale(0.95); }
-    }
+        .btn-action { width: 100%; padding: 18px; border-radius: 14px; font-size: 20px; font-weight: 900; color: white; border: none; cursor: pointer; transition: 0.2s; background: var(--primary); }
+        .btn-action:active { transform: scale(0.96); }
+        .btn-action.cashed { background: var(--success); color: black; }
+        .btn-action.waiting { background: #333; color: var(--text-muted); cursor: not-allowed; }
 
-    @keyframes loading-spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
+        /* شريط الهستري */
+        .history { display: flex; gap: 8px; overflow-x: auto; margin-bottom: 15px; padding-bottom: 5px; }
+        .history::-webkit-scrollbar { display: none; }
+        .h-badge { padding: 4px 10px; border-radius: 8px; font-size: 13px; font-weight: bold; background: #2a2a35; white-space: nowrap; }
+        .h-badge.good { color: var(--success); background: rgba(0, 230, 118, 0.1); border: 1px solid rgba(0, 230, 118, 0.2); }
+        .h-badge.bad { color: var(--danger); background: rgba(255, 59, 48, 0.1); border: 1px solid rgba(255, 59, 48, 0.2); }
 
-    @keyframes slide-up {
-      from { opacity: 0; transform: translateY(30px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    @keyframes fade-in {
-      from { opacity: 0; }
-      to { opacity: 1; }
-    }
-
-    @keyframes scale-in {
-      from { opacity: 0; transform: scale(0.8); }
-      to { opacity: 1; transform: scale(1); }
-    }
-
-    @keyframes ticker {
-      0% { transform: translateX(0); }
-      100% { transform: translateX(-50%); }
-    }
-
-    @keyframes glow-pulse {
-      0%, 100% { box-shadow: 0 0 20px rgba(0, 152, 234, 0.3); }
-      50% { box-shadow: 0 0 40px rgba(0, 152, 234, 0.6); }
-    }
-
-    @keyframes float {
-      0%, 100% { transform: translateY(0); }
-      50% { transform: translateY(-10px); }
-    }
-
-    @keyframes rocket-fly {
-      0% { transform: translateY(0) rotate(-45deg); }
-      50% { transform: translateY(-20px) rotate(-50deg); }
-      100% { transform: translateY(0) rotate(-45deg); }
-    }
-
-    @keyframes crash-shake {
-      0%, 100% { transform: translateX(0); }
-      20% { transform: translateX(-8px); }
-      40% { transform: translateX(8px); }
-      60% { transform: translateX(-4px); }
-      80% { transform: translateX(4px); }
-    }
-
-    @keyframes multiplier-grow {
-      0%, 100% { transform: scale(1); }
-      50% { transform: scale(1.02); }
-    }
-
-    @keyframes wheel-spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(var(--spin-deg, 1800deg)); }
-    }
-
-    @keyframes particle-float {
-      0% { transform: translateY(0) scale(1); opacity: 1; }
-      100% { transform: translateY(-100px) scale(0); opacity: 0; }
-    }
-
-    @keyframes gradient-flow {
-      0% { background-position: 0% 50%; }
-      50% { background-position: 100% 50%; }
-      100% { background-position: 0% 50%; }
-    }
-
-    @keyframes border-glow {
-      0%, 100% { border-color: rgba(0, 152, 234, 0.5); }
-      50% { border-color: rgba(0, 152, 234, 1); }
-    }
-
-    .animate-loading { animation: loading-pulse 1.5s ease-in-out infinite; }
-    .animate-spin { animation: loading-spin 1s linear infinite; }
-    .animate-slide-up { animation: slide-up 0.4s ease-out forwards; }
-    .animate-fade-in { animation: fade-in 0.3s ease-out forwards; }
-    .animate-scale-in { animation: scale-in 0.3s ease-out forwards; }
-    .animate-ticker { animation: ticker 40s linear infinite; }
-    .animate-glow { animation: glow-pulse 2s ease-in-out infinite; }
-    .animate-float { animation: float 3s ease-in-out infinite; }
-    .animate-rocket { animation: rocket-fly 1s ease-in-out infinite; }
-    .animate-crash { animation: crash-shake 0.5s ease-in-out; }
-    .animate-multiplier { animation: multiplier-grow 0.3s ease-in-out infinite; }
-    .animate-wheel { animation: wheel-spin 4s cubic-bezier(0.17, 0.67, 0.12, 0.99) forwards; }
-    .animate-gradient { 
-      background-size: 200% 200%;
-      animation: gradient-flow 3s ease infinite;
-    }
-    .animate-border-glow { animation: border-glow 2s ease-in-out infinite; }
-
-    .btn-haptic {
-      transition: all 0.15s ease;
-    }
-    .btn-haptic:active {
-      transform: scale(0.95);
-    }
-
-    .card-hover {
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-    .card-hover:hover {
-      transform: translateY(-4px);
-    }
-    .card-hover:active {
-      transform: scale(0.98);
-    }
-
-    .nav-item {
-      position: relative;
-      transition: all 0.2s ease;
-    }
-    .nav-item.active {
-      color: var(--accent-blue);
-    }
-    .nav-item.active::after {
-      content: '';
-      position: absolute;
-      top: -8px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 20px;
-      height: 3px;
-      background: var(--accent-blue);
-      border-radius: 3px;
-    }
-
-    .view { display: none; }
-    .view.active { display: flex; flex-direction: column; }
-
-    /* Loading Screen */
-    #loading-screen {
-      position: fixed;
-      inset: 0;
-      z-index: 9999;
-      background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      transition: opacity 0.5s ease, visibility 0.5s ease;
-    }
-
-    .loader-logo {
-      width: 120px;
-      height: 120px;
-      position: relative;
-    }
-
-    .loader-ring {
-      position: absolute;
-      inset: 0;
-      border: 3px solid transparent;
-      border-top-color: var(--accent-blue);
-      border-radius: 50%;
-      animation: loading-spin 1s linear infinite;
-    }
-
-    .loader-ring:nth-child(2) {
-      inset: 8px;
-      border-top-color: var(--accent-purple);
-      animation-duration: 0.8s;
-      animation-direction: reverse;
-    }
-
-    .loader-ring:nth-child(3) {
-      inset: 16px;
-      border-top-color: var(--accent-gold);
-      animation-duration: 0.6s;
-    }
-
-    /* Gift Grid */
-    .gift-item {
-      position: relative;
-      transition: all 0.2s ease;
-    }
-    .gift-item::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      border-radius: inherit;
-      background: linear-gradient(135deg, rgba(0, 152, 234, 0.1), rgba(139, 92, 246, 0.1));
-      opacity: 0;
-      transition: opacity 0.2s ease;
-    }
-    .gift-item:hover::before {
-      opacity: 1;
-    }
-
-    /* Case Animation */
-    .case-opening {
-      position: relative;
-      overflow: hidden;
-    }
-
-    /* Rocket Trail */
-    .rocket-trail {
-      position: absolute;
-      bottom: 0;
-      left: 50%;
-      width: 6px;
-      background: linear-gradient(to top, transparent, var(--accent-gold), var(--accent-red));
-      border-radius: 3px;
-      transform: translateX(-50%);
-      transition: height 0.1s ease;
-    }
-
-    /* Wheel */
-    .wheel-container {
-      position: relative;
-      width: 260px;
-      height: 260px;
-    }
-
-    .wheel-pointer {
-      position: absolute;
-      top: -10px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 0;
-      height: 0;
-      border-left: 12px solid transparent;
-      border-right: 12px solid transparent;
-      border-top: 20px solid var(--accent-gold);
-      z-index: 10;
-      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
-    }
-
-    /* Modal */
-    .modal-backdrop {
-      background: rgba(0, 0, 0, 0.85);
-      backdrop-filter: blur(8px);
-    }
-
-    .modal-content {
-      animation: scale-in 0.3s ease-out forwards;
-    }
-
-    /* Safe area */
-    .safe-bottom {
-      padding-bottom: env(safe-area-inset-bottom, 0);
-    }
-
-    @media (prefers-reduced-motion: reduce) {
-      *, *::before, *::after {
-        animation-duration: 0.01ms !important;
-        animation-iteration-count: 1 !important;
-        transition-duration: 0.01ms !important;
-      }
-    }
-  </style>
+    </style>
 </head>
 <body>
-  
-  <!-- شاشة التحميل -->
-  <div id="loading-screen">
-    <div class="loader-logo">
-      <div class="loader-ring"></div>
-      <div class="loader-ring"></div>
-      <div class="loader-ring"></div>
-      <div class="absolute inset-0 flex items-center justify-center">
-        <svg class="w-16 h-16" viewBox="0 0 100 100" fill="none">
-          <rect x="20" y="30" width="60" height="50" rx="8" fill="#0f0f18" stroke="#0098ea" stroke-width="3"/>
-          <rect x="30" y="20" width="40" height="15" rx="4" fill="#0f0f18" stroke="#8b5cf6" stroke-width="2"/>
-          <circle cx="50" cy="55" r="12" fill="#fbbf24"/>
-          <path d="M50 43 L50 67 M38 55 L62 55" stroke="#0f0f18" stroke-width="3" stroke-linecap="round"/>
+
+    <div class="header">
+        <div class="online-status">
+            <div class="dot"></div> online
+        </div>
+        <div class="balance-box">💎 <span id="balance">100.00</span></div>
+    </div>
+
+    <div class="game-area">
+        <div class="stars"></div>
+        
+        <svg class="trail-svg" preserveAspectRatio="none">
+            <defs>
+                <linearGradient id="trailGradient" x1="0%" y1="100%" x2="100%" y2="0%">
+                    <stop offset="0%" stop-color="rgba(0, 230, 118, 0)" />
+                    <stop offset="100%" stop-color="rgba(0, 230, 118, 1)" />
+                </linearGradient>
+            </defs>
+            <path id="flight-path" class="trail-path" d="" />
         </svg>
-      </div>
-    </div>
-    <h1 class="font-arabic text-2xl font-bold mt-6 bg-gradient-to-l from-[#0098ea] to-[#8b5cf6] bg-clip-text text-transparent">
-      NFT Battle Pro
-    </h1>
-    <p class="text-[var(--text-muted)] mt-2 animate-loading">جاري التحميل...</p>
-  </div>
 
-  <!-- التطبيق -->
-  <div id="app" class="h-full flex flex-col hidden">
-    
-    <!-- الهيدر -->
-    <header class="glass-strong sticky top-0 z-50 px-4 py-3 flex items-center justify-between">
-      <div class="flex items-center gap-3">
-        <div id="user-avatar" class="w-11 h-11 rounded-full bg-[var(--bg-elevated)] border-2 border-[var(--accent-blue)] overflow-hidden flex items-center justify-center">
-          <svg class="w-6 h-6 text-[var(--text-muted)]" fill="currentColor" viewBox="0 0 24 24">
-            <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
-          </svg>
+        <div class="status-text" id="status-text">NEXT ROUND IN</div>
+        <div class="multiplier" id="multi-text">5.0</div>
+        
+        <div class="rocket-container" id="rocket">
+            <img src="https://cdn-icons-png.flaticon.com/512/3256/3256114.png" class="rocket-img" id="rocket-img">
         </div>
-        <div>
-          <p id="user-name" class="font-arabic font-bold">جاري التحميل...</p>
-          <div class="flex items-center gap-1.5">
-            <div class="w-2 h-2 bg-[var(--accent-green)] rounded-full animate-pulse"></div>
-            <span class="text-xs text-[var(--accent-green)]">متصل</span>
-          </div>
-        </div>
-      </div>
-      
-      <div class="flex items-center gap-2">
-        <div class="glass px-4 py-2.5 rounded-2xl flex items-center gap-2">
-          <div class="w-5 h-5 rounded-full bg-gradient-to-br from-[#fbbf24] to-[#f97316] flex items-center justify-center">
-            <span class="text-xs">T</span>
-          </div>
-          <span id="balance" class="font-arabic font-bold">100.00</span>
-        </div>
-      </div>
-    </header>
-
-    <!-- شريط الفوز المباشر -->
-    <div class="bg-[var(--bg-secondary)] border-b border-white/5 py-2 overflow-hidden">
-      <div id="live-drops" class="flex animate-ticker whitespace-nowrap"></div>
     </div>
 
-    <!-- المحتوى -->
-    <main class="flex-1 overflow-y-auto overflow-x-hidden pb-24">
-      
-      <!-- البروفايل -->
-      <div id="view-profile" class="view active p-4 gap-4">
-        
-        <!-- بطاقة اللاعب -->
-        <div class="glass rounded-3xl p-5 relative overflow-hidden animate-slide-up">
-          <div class="absolute inset-0 bg-gradient-to-br from-[var(--accent-blue)]/10 via-transparent to-[var(--accent-purple)]/10"></div>
-          <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-l from-[var(--accent-blue)] via-[var(--accent-purple)] to-[var(--accent-gold)]"></div>
-          
-          <div class="relative flex items-center gap-4">
-            <div id="profile-avatar" class="w-20 h-20 rounded-2xl bg-[var(--bg-elevated)] border-2 border-[var(--accent-blue)] overflow-hidden flex items-center justify-center">
-              <svg class="w-10 h-10 text-[var(--text-muted)]" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
-              </svg>
+    <div class="controls">
+        <div class="history" id="history-bar">
             </div>
-            <div class="flex-1">
-              <h2 id="profile-name" class="font-arabic text-xl font-bold">لاعب</h2>
-              <div class="flex items-center gap-2 mt-1">
-                <span class="px-3 py-1 rounded-full bg-[var(--accent-purple)]/20 text-[var(--accent-purple)] text-sm font-bold">
-                  المستوى <span id="level">1</span>
-                </span>
-              </div>
-            </div>
-          </div>
-          
-          <!-- شريط XP -->
-          <div class="relative mt-4">
-            <div class="flex justify-between text-xs text-[var(--text-muted)] mb-2">
-              <span>الخبرة</span>
-              <span><span id="xp">0</span> / <span id="next-xp">150</span></span>
-            </div>
-            <div class="h-2 bg-[var(--bg-elevated)] rounded-full overflow-hidden">
-              <div id="xp-bar" class="h-full bg-gradient-to-l from-[var(--accent-blue)] to-[var(--accent-purple)] rounded-full transition-all duration-500" style="width: 0%"></div>
-            </div>
-          </div>
+
+        <div class="skins-row">
+            <div class="skin-btn active" onclick="changeSkin(this, 'https://cdn-icons-png.flaticon.com/512/3256/3256114.png')">
+                <img src="https://cdn-icons-png.flaticon.com/512/3256/3256114.png"> </div>
+            <div class="skin-btn" onclick="changeSkin(this, 'https://cdn-icons-png.flaticon.com/512/1940/1940842.png')">
+                <img src="https://cdn-icons-png.flaticon.com/512/1940/1940842.png"> </div>
+            <div class="skin-btn" onclick="changeSkin(this, 'https://cdn-icons-png.flaticon.com/512/2855/2855422.png')">
+                <img src="https://cdn-icons-png.flaticon.com/512/2855/2855422.png"> </div>
         </div>
 
-        <!-- Rewards & Invites -->
-        <div class="grid grid-cols-2 gap-3 animate-slide-up" style="animation-delay: 0.1s">
-          <button id="rewards-btn" class="glass rounded-2xl p-4 card-hover relative overflow-hidden group">
-            <div class="absolute inset-0 bg-gradient-to-br from-[var(--accent-gold)]/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-            <div class="relative flex flex-col items-center">
-              <div class="w-12 h-12 rounded-xl bg-[var(--accent-gold)]/20 flex items-center justify-center mb-2">
-                <svg class="w-6 h-6 text-[var(--accent-gold)]" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M20 6h-2.18c.11-.31.18-.65.18-1a2.996 2.996 0 0 0-5.5-1.65l-.5.67-.5-.68C10.96 2.54 10.05 2 9 2 7.34 2 6 3.34 6 5c0 .35.07.69.18 1H4c-1.11 0-1.99.89-1.99 2L2 19c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2zm-5-2c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zM9 4c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm11 15H4v-2h16v2zm0-5H4V8h5.08L7 10.83 8.62 12 11 8.76l1-1.36 1 1.36L15.38 12 17 10.83 14.92 8H20v6z"/>
-                </svg>
-              </div>
-              <p class="font-arabic font-bold">المكافآت</p>
-              <p class="text-xs text-[var(--text-muted)]">جائزة المستوى</p>
-            </div>
-          </button>
-          
-          <button id="invites-btn" class="glass rounded-2xl p-4 card-hover relative overflow-hidden group">
-            <div class="absolute inset-0 bg-gradient-to-br from-[var(--accent-green)]/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-            <div class="relative flex flex-col items-center">
-              <div class="w-12 h-12 rounded-xl bg-[var(--accent-green)]/20 flex items-center justify-center mb-2">
-                <svg class="w-6 h-6 text-[var(--accent-green)]" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/>
-                </svg>
-              </div>
-              <p class="font-arabic font-bold">الدعوات</p>
-              <p class="text-xs text-[var(--accent-green)]">+80 TON</p>
-            </div>
-          </button>
+        <div class="bet-input-container">
+            <button onclick="adjustBet(-0.5)">-</button>
+            <input type="number" id="bet-input" value="1.00" step="0.5" min="0.5">
+            <button onclick="adjustBet(0.5)">+</button>
         </div>
 
-        <!-- الهدايا -->
-        <div class="animate-slide-up" style="animation-delay: 0.2s">
-          <div class="flex items-center justify-between mb-3">
-            <h3 class="font-arabic font-bold text-lg">هداياي</h3>
-            <button id="sell-all-btn" class="px-4 py-2 rounded-xl bg-[var(--accent-red)]/20 text-[var(--accent-red)] text-sm font-bold btn-haptic">
-              بيع الكل
-            </button>
-          </div>
-          <div id="user-gifts" class="grid grid-cols-3 gap-2"></div>
-        </div>
-      </div>
-
-      <!-- الصناديق -->
-      <div id="view-cases" class="view p-4 gap-4">
-        <div class="animate-slide-up">
-          <h2 class="font-arabic font-bold text-lg mb-3">الصناديق</h2>
-          <div id="cases-grid" class="grid grid-cols-2 gap-3"></div>
-        </div>
-      </div>
-
-      <!-- الترقية -->
-      <div id="view-upgrade" class="view p-4 gap-4">
-        <div class="animate-slide-up">
-          <h2 class="font-arabic font-bold text-lg mb-3">ترقية الهدايا</h2>
-          
-          <div class="glass rounded-2xl p-4">
-            <p class="text-center text-[var(--text-muted)] mb-4 text-sm">اختر هدية للترقية</p>
-            <div id="upgrade-select" class="grid grid-cols-4 gap-2 max-h-40 overflow-y-auto"></div>
-          </div>
-          
-          <div id="upgrade-targets-container" class="hidden mt-4">
-            <div class="glass rounded-2xl p-4">
-              <h3 class="font-arabic font-bold mb-3">اختر هدية للفوز</h3>
-              <div id="upgrade-targets" class="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto"></div>
-            </div>
-          </div>
-          
-          <div id="upgrade-action" class="hidden mt-4">
-            <div class="glass rounded-2xl p-4 text-center">
-              <p class="text-[var(--text-muted)] text-sm mb-2">نسبة الفوز</p>
-              <p id="upgrade-chance" class="text-4xl font-bold text-[var(--accent-green)]">0%</p>
-              <button id="upgrade-btn" class="w-full mt-4 py-4 rounded-xl bg-gradient-to-l from-[var(--accent-purple)] to-[var(--accent-blue)] font-arabic font-bold text-lg btn-haptic">
-                ترقية
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- PVP -->
-      <div id="view-pvp" class="view p-4 gap-4">
-        <div class="animate-slide-up">
-          <h2 class="font-arabic font-bold text-lg mb-3">معارك PVP</h2>
-          
-          <div id="pvp-status" class="glass rounded-2xl p-6 text-center">
-            <p class="text-[var(--text-muted)] mb-4">لا توجد معارك حالياً</p>
-            <button id="create-pvp-btn" class="px-8 py-3 rounded-xl bg-gradient-to-l from-[var(--accent-blue)] to-[var(--accent-purple)] font-arabic font-bold btn-haptic animate-glow">
-              إنشاء معركة
-            </button>
-          </div>
-          
-          <div id="pvp-active" class="hidden">
-            <div class="glass rounded-2xl p-4">
-              <div class="text-center mb-4">
-                <p class="text-[var(--text-muted)] text-sm">الوقت المتبقي</p>
-                <p id="pvp-timer" class="text-5xl font-bold text-[var(--accent-gold)]">25</p>
-              </div>
-              
-              <div id="pvp-participants" class="space-y-2 mb-4 max-h-32 overflow-y-auto"></div>
-              
-              <button id="join-pvp-btn" class="w-full py-3 rounded-xl bg-[var(--accent-green)] font-arabic font-bold btn-haptic">
-                مشاركة بهدية
-              </button>
-            </div>
-            
-            <div id="pvp-wheel-container" class="hidden mt-4 flex flex-col items-center">
-              <div class="wheel-container">
-                <div class="wheel-pointer"></div>
-                <canvas id="pvp-wheel" width="260" height="260"></canvas>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- الصاروخ -->
-      <div id="view-rocket" class="view">
-        <div class="flex flex-col h-full">
-          
-          <div class="flex-1 relative min-h-[300px] flex items-center justify-center overflow-hidden">
-            <div class="absolute inset-0 bg-gradient-to-b from-[var(--bg-primary)] via-[var(--bg-secondary)] to-[var(--bg-primary)]"></div>
-            <div id="stars" class="absolute inset-0"></div>
-            
-            <div id="rocket-area" class="relative z-10">
-              <div id="rocket-idle" class="text-center">
-                <svg class="w-24 h-24 mx-auto animate-float" viewBox="0 0 100 100" fill="none">
-                  <defs>
-                    <linearGradient id="bodyGrad" x1="50" y1="15" x2="50" y2="60">
-                      <stop offset="0%" stop-color="#ffffff"/>
-                      <stop offset="100%" stop-color="#888888"/>
-                    </linearGradient>
-                  </defs>
-                  <path d="M50 10 L68 55 H32 L50 10Z" fill="url(#bodyGrad)"/>
-                  <ellipse cx="50" cy="62" rx="14" ry="18" fill="#1a1a24"/>
-                  <circle cx="50" cy="56" r="8" fill="#0098ea"/>
-                  <path d="M32 75 L22 95 L38 80Z" fill="#ef4444"/>
-                  <path d="M68 75 L78 95 L62 80Z" fill="#fbbf24"/>
-                  <path d="M42 82 L50 100 L58 82Z" fill="#22c55e"/>
-                </svg>
-              </div>
-              
-              <div id="rocket-flying" class="hidden text-center">
-                <svg class="w-20 h-20 mx-auto animate-rocket" viewBox="0 0 100 100" fill="none">
-                  <path d="M50 10 L68 55 H32 L50 10Z" fill="url(#bodyGrad)"/>
-                  <ellipse cx="50" cy="62" rx="14" ry="18" fill="#1a1a24"/>
-                  <circle cx="50" cy="56" r="8" fill="#22c55e"/>
-                  <path d="M32 75 L18 98 L40 82Z" fill="#ef4444" class="animate-pulse"/>
-                  <path d="M68 75 L82 98 L60 82Z" fill="#fbbf24" class="animate-pulse"/>
-                  <path d="M42 82 L35 100 L55 85Z" fill="#22c55e" class="animate-pulse"/>
-                </svg>
-              </div>
-              
-              <div id="rocket-crashed" class="hidden text-center">
-                <div class="w-20 h-20 mx-auto rounded-full bg-[var(--accent-red)]/20 flex items-center justify-center">
-                  <svg class="w-12 h-12 text-[var(--accent-red)]" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" transform="rotate(45 12 12)"/>
-                  </svg>
-                </div>
-                <p class="text-[var(--accent-red)] font-arabic font-bold mt-2 text-xl">انهيار!</p>
-              </div>
-            </div>
-            
-            <div class="absolute top-4 left-0 right-0 text-center">
-              <p id="rocket-multiplier" class="text-6xl font-black text-[var(--accent-blue)]">1.00x</p>
-            </div>
-          </div>
-          
-          <div class="px-4 py-2 overflow-x-auto">
-            <div id="rocket-history" class="flex gap-2"></div>
-          </div>
-          
-          <div class="glass-strong p-4 space-y-4 safe-bottom">
-            <div class="flex items-center gap-3">
-              <div class="flex-1 glass rounded-xl p-3 flex items-center gap-2">
-                <button id="rocket-minus" class="w-9 h-9 rounded-lg bg-[var(--bg-elevated)] flex items-center justify-center btn-haptic font-bold text-lg">-</button>
-                <input id="rocket-amount" type="text" value="1.00" class="flex-1 bg-transparent text-center font-bold text-lg outline-none" readonly>
-                <button id="rocket-plus" class="w-9 h-9 rounded-lg bg-[var(--bg-elevated)] flex items-center justify-center btn-haptic font-bold text-lg">+</button>
-              </div>
-              <div class="flex gap-1">
-                <button class="rocket-quick-btn px-3 py-2 rounded-lg bg-[var(--bg-elevated)] text-xs font-bold btn-haptic" data-amount="0.5">0.5</button>
-                <button class="rocket-quick-btn px-3 py-2 rounded-lg bg-[var(--bg-elevated)] text-xs font-bold btn-haptic" data-amount="5">5</button>
-                <button class="rocket-quick-btn px-3 py-2 rounded-lg bg-[var(--bg-elevated)] text-xs font-bold btn-haptic" data-amount="10">10</button>
-              </div>
-            </div>
-            
-            <div class="grid grid-cols-2 gap-3">
-              <button id="rocket-bet" class="py-4 rounded-xl bg-gradient-to-l from-[var(--accent-blue)] to-[var(--accent-cyan)] font-arabic font-bold text-lg btn-haptic">
-                مراهنة
-              </button>
-              <button id="rocket-cashout" class="py-4 rounded-xl bg-[var(--accent-green)] font-arabic font-bold text-lg btn-haptic opacity-50" disabled>
-                سحب
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- العقود -->
-      <div id="view-contract" class="view p-4 gap-4">
-        <div class="animate-slide-up">
-          <h2 class="font-arabic font-bold text-lg mb-3">العقود</h2>
-          
-          <div class="glass rounded-2xl p-4">
-            <p class="text-center text-[var(--text-muted)] mb-4 text-sm">اختر 3-10 هدايا</p>
-            <div id="contract-select" class="grid grid-cols-4 gap-2 max-h-40 overflow-y-auto"></div>
-            <p class="text-center mt-3 text-sm text-[var(--text-muted)]">
-              تم اختيار: <span id="contract-count" class="text-[var(--accent-blue)] font-bold">0</span>
-            </p>
-          </div>
-          
-          <div id="contract-modes" class="hidden mt-4">
-            <div class="grid grid-cols-3 gap-3">
-              <button class="contract-mode glass rounded-2xl p-4 text-center card-hover" data-mode="safe">
-                <div class="w-12 h-12 rounded-xl bg-[var(--accent-green)]/20 flex items-center justify-center mx-auto mb-2">
-                  <svg class="w-6 h-6 text-[var(--accent-green)]" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z"/>
-                  </svg>
-                </div>
-                <p class="font-arabic font-bold text-[var(--accent-green)]">آمن</p>
-                <p class="text-xs text-[var(--text-muted)] mt-1">نسبة فوز عالية</p>
-              </button>
-              
-              <button class="contract-mode glass rounded-2xl p-4 text-center card-hover" data-mode="medium">
-                <div class="w-12 h-12 rounded-xl bg-[var(--accent-gold)]/20 flex items-center justify-center mx-auto mb-2">
-                  <svg class="w-6 h-6 text-[var(--accent-gold)]" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
-                  </svg>
-                </div>
-                <p class="font-arabic font-bold text-[var(--accent-gold)]">متوسط</p>
-                <p class="text-xs text-[var(--text-muted)] mt-1">توازن</p>
-              </button>
-              
-              <button class="contract-mode glass rounded-2xl p-4 text-center card-hover" data-mode="risk">
-                <div class="w-12 h-12 rounded-xl bg-[var(--accent-red)]/20 flex items-center justify-center mx-auto mb-2">
-                  <svg class="w-6 h-6 text-[var(--accent-red)]" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M12 5.99L19.53 19H4.47L12 5.99M12 2L1 21h22L12 2zm1 14h-2v2h2v-2zm0-6h-2v4h2v-4z"/>
-                  </svg>
-                </div>
-                <p class="font-arabic font-bold text-[var(--accent-red)]">مخاطرة</p>
-                <p class="text-xs text-[var(--text-muted)] mt-1">ربح كبير</p>
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-      
-    </main>
-
-    <!-- التنقل -->
-    <nav class="glass-strong fixed bottom-0 left-0 right-0 z-50 px-2 py-3 safe-bottom">
-      <div class="flex justify-around">
-        <button class="nav-item active flex flex-col items-center px-3 py-1" data-view="profile">
-          <svg class="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
-          </svg>
-          <span class="text-xs font-arabic">حسابي</span>
-        </button>
-        <button class="nav-item flex flex-col items-center px-3 py-1" data-view="cases">
-          <svg class="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
-          </svg>
-          <span class="text-xs font-arabic">صناديق</span>
-        </button>
-        <button class="nav-item flex flex-col items-center px-3 py-1" data-view="upgrade">
-          <svg class="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
-          </svg>
-          <span class="text-xs font-arabic">ترقية</span>
-        </button>
-        <button class="nav-item flex flex-col items-center px-3 py-1" data-view="pvp">
-          <svg class="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
-          </svg>
-          <span class="text-xs font-arabic">PVP</span>
-        </button>
-        <button class="nav-item flex flex-col items-center px-3 py-1" data-view="rocket">
-          <svg class="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
-          </svg>
-          <span class="text-xs font-arabic">صاروخ</span>
-        </button>
-        <button class="nav-item flex flex-col items-center px-3 py-1" data-view="contract">
-          <svg class="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-          </svg>
-          <span class="text-xs font-arabic">عقد</span>
-        </button>
-      </div>
-    </nav>
-
-    <!-- مودال الصندوق -->
-    <div id="case-modal" class="fixed inset-0 z-[100] hidden">
-      <div class="modal-backdrop absolute inset-0" id="case-modal-bg"></div>
-      <div class="absolute bottom-0 left-0 right-0 glass-strong rounded-t-3xl p-6 modal-content safe-bottom">
-        <div class="w-12 h-1 bg-white/20 rounded-full mx-auto mb-6"></div>
-        
-        <div class="text-center mb-6">
-          <div id="modal-case-icon" class="w-24 h-24 mx-auto mb-4 rounded-2xl bg-[var(--bg-elevated)] flex items-center justify-center text-4xl"></div>
-          <h3 id="modal-case-name" class="font-arabic text-xl font-bold">صندوق</h3>
-          <p id="modal-case-price" class="text-[var(--accent-gold)] font-bold text-lg mt-1">49 TON</p>
-        </div>
-        
-        <div class="flex justify-center gap-3 mb-6">
-          <button class="case-multi px-4 py-2 rounded-xl bg-[var(--accent-blue)] font-bold btn-haptic active" data-m="1">1x</button>
-          <button class="case-multi px-4 py-2 rounded-xl bg-[var(--bg-elevated)] font-bold btn-haptic" data-m="3">3x</button>
-          <button class="case-multi px-4 py-2 rounded-xl bg-[var(--bg-elevated)] font-bold btn-haptic" data-m="5">5x</button>
-          <button class="case-multi px-4 py-2 rounded-xl bg-[var(--bg-elevated)] font-bold btn-haptic" data-m="10">10x</button>
-        </div>
-        
-        <div class="glass rounded-xl p-4 mb-4">
-          <div class="flex justify-between items-center">
-            <span class="text-[var(--text-secondary)] font-arabic">المجموع</span>
-            <span id="modal-total" class="text-xl font-bold text-[var(--accent-gold)]">49 TON</span>
-          </div>
-        </div>
-        
-        <button id="open-case-btn" class="w-full py-4 rounded-xl bg-gradient-to-l from-[var(--accent-blue)] to-[var(--accent-purple)] font-arabic font-bold text-lg btn-haptic">
-          فتح الصندوق
-        </button>
-      </div>
+        <button class="btn-action" id="action-btn" onclick="handleAction()">ضع مبلغك (Bet)</button>
     </div>
 
-    <!-- مودال النتيجة -->
-    <div id="result-modal" class="fixed inset-0 z-[100] hidden">
-      <div class="modal-backdrop absolute inset-0"></div>
-      <div class="absolute inset-0 flex items-center justify-center p-4">
-        <div class="glass-strong rounded-3xl p-6 max-w-sm w-full modal-content text-center">
-          <div id="result-icon" class="w-24 h-24 mx-auto mb-4 rounded-2xl bg-[var(--bg-elevated)] flex items-center justify-center text-5xl"></div>
-          <h3 id="result-title" class="font-arabic text-2xl font-bold mb-1">مبروك!</h3>
-          <p id="result-name" class="text-[var(--text-secondary)] mb-3">هدية</p>
-          <p id="result-value" class="text-3xl font-black text-[var(--accent-gold)] mb-6">0 TON</p>
-          <button id="result-close" class="w-full py-3 rounded-xl bg-[var(--bg-elevated)] font-arabic font-bold btn-haptic">
-            متابعة
-          </button>
-        </div>
-      </div>
-    </div>
+    <script>
+        // --- متغيرات محرك اللعبة ---
+        let balance = 100.00;
+        let gameState = 'waiting'; // waiting, flying, crashed
+        let currentMultiplier = 1.00;
+        let crashPoint = 1.00;
+        let betAmount = 0;
+        let userStatus = 'none'; // none, bet_placed, cashed_out
+        
+        // عناصر الـ DOM
+        const multiText = document.getElementById('multi-text');
+        const statusText = document.getElementById('status-text');
+        const rocket = document.getElementById('rocket');
+        const flightPath = document.getElementById('flight-path');
+        const actionBtn = document.getElementById('action-btn');
+        const balanceDisplay = document.getElementById('balance');
+        const historyBar = document.getElementById('history-bar');
+        const betInput = document.getElementById('bet-input');
 
-    <!-- مودال اختيار الهدية -->
-    <div id="gift-modal" class="fixed inset-0 z-[100] hidden">
-      <div class="modal-backdrop absolute inset-0" id="gift-modal-bg"></div>
-      <div class="absolute bottom-0 left-0 right-0 glass-strong rounded-t-3xl p-6 modal-content max-h-[70vh] overflow-y-auto safe-bottom">
-        <div class="w-12 h-1 bg-white/20 rounded-full mx-auto mb-4"></div>
-        <h3 class="font-arabic font-bold text-lg mb-4">اختر هدية</h3>
-        <div id="gift-grid" class="grid grid-cols-3 gap-2"></div>
-      </div>
-    </div>
+        let gameInterval;
+        let animationTime = 0;
 
-  </div>
-
-  <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <script>
-    // ==================== CONFIG ====================
-    const CONFIG = {
-      DEV_ID: 7126816492,
-      INVITE_REWARD: 80,
-      MAX_CRASH: 500,
-    };
-
-    // ==================== DATA ====================
-    const GIFTS = [
-      { id: 1, name: 'Plush Pepe', emoji: '🐸', value: 8000, chance: 1, color: '#22c55e' },
-      { id: 2, name: 'Diamond', emoji: '💎', value: 5000, chance: 2, color: '#0098ea' },
-      { id: 3, name: 'Gold Bar', emoji: '🪙', value: 3000, chance: 3, color: '#fbbf24' },
-      { id: 4, name: 'Rocket', emoji: '🚀', value: 2000, chance: 5, color: '#ef4444' },
-      { id: 5, name: 'Crown', emoji: '👑', value: 1500, chance: 7, color: '#8b5cf6' },
-      { id: 6, name: 'Star', emoji: '⭐', value: 800, chance: 10, color: '#fbbf24' },
-      { id: 7, name: 'Gift', emoji: '🎁', value: 500, chance: 15, color: '#ef4444' },
-      { id: 8, name: 'Heart', emoji: '❤️', value: 300, chance: 20, color: '#ef4444' },
-      { id: 9, name: 'Fire', emoji: '🔥', value: 150, chance: 25, color: '#f97316' },
-      { id: 10, name: 'Coin', emoji: '🪙', value: 50, chance: 30, color: '#fbbf24' },
-    ];
-
-    const CASES = [
-      { id: 1, name: 'صندوق البداية', price: 49, gifts: [10, 9], color: '#22c55e', icon: '📦' },
-      { id: 2, name: 'صندوق النجم', price: 99, gifts: [9, 8, 7], color: '#fbbf24', icon: '⭐' },
-      { id: 3, name: 'صندوق النار', price: 199, gifts: [8, 7, 6], color: '#f97316', icon: '🔥' },
-      { id: 4, name: 'صندوق القلب', price: 299, gifts: [7, 6, 5], color: '#ef4444', icon: '❤️' },
-      { id: 5, name: 'صندوق الهدية', price: 499, gifts: [6, 5, 4], color: '#ec4899', icon: '🎁' },
-      { id: 6, name: 'صندوق النجمة', price: 799, gifts: [5, 4, 3], color: '#fbbf24', icon: '✨' },
-      { id: 7, name: 'صندوق التاج', price: 999, gifts: [4, 3, 2], color: '#8b5cf6', icon: '👑' },
-      { id: 8, name: 'صندوق الصاروخ', price: 1499, gifts: [3, 2], color: '#ef4444', icon: '🚀' },
-      { id: 9, name: 'صندوق الذهب', price: 2499, gifts: [3, 2], color: '#fbbf24', icon: '🪙' },
-      { id: 10, name: 'صندوق الماس', price: 4999, gifts: [2, 1], color: '#0098ea', icon: '💎' },
-      { id: 11, name: 'صندوق Pepe', price: 9999, gifts: [1], color: '#22c55e', icon: '🐸' },
-    ];
-
-    const LEVELS = [
-      { level: 1, xp: 0 },
-      { level: 2, xp: 150 },
-      { level: 3, xp: 500 },
-      { level: 4, xp: 1200 },
-      { level: 5, xp: 2500 },
-      { level: 6, xp: 5000 },
-      { level: 7, xp: 10000 },
-      { level: 8, xp: 20000 },
-      { level: 9, xp: 40000 },
-      { level: 10, xp: 80000 },
-    ];
-
-    // ==================== STATE ====================
-    const STATE = {
-      user: {
-        id: null,
-        name: 'ضيف',
-        balance: 100,
-        level: 1,
-        xp: 0,
-        gifts: [],
-        invites: 0,
-      },
-      ui: {
-        currentView: 'profile',
-        selectedCase: null,
-        caseMultiplier: 1,
-        upgradeGift: null,
-        upgradeTarget: null,
-        contractGifts: [],
-      },
-      pvp: {
-        active: false,
-        timer: 25,
-        participants: [],
-        totalPrize: 0,
-        interval: null,
-      },
-      rocket: {
-        playing: false,
-        hasBet: false,
-        amount: 1,
-        multiplier: 1.00,
-        crashPoint: 0,
-        history: [2.45, 1.23, 5.67, 1.01, 3.89, 1.56, 8.90, 1.34, 4.56, 1.78],
-        interval: null,
-      },
-    };
-
-    // ==================== UTILS ====================
-    const Utils = {
-      fmt(n) { return Number(n).toFixed(2); },
-      
-      rand(min, max) { return Math.random() * (max - min) + min; },
-      
-      crashPoint() {
-        const r = Math.random();
-        if (r < 0.01) return 1.00;
-        return Math.min(CONFIG.MAX_CRASH, Math.max(1, (1 / (1 - r)) * 0.97));
-      },
-      
-      weightedPick(giftIds) {
-        const gifts = giftIds.map(id => GIFTS.find(g => g.id === id)).filter(Boolean);
-        const total = gifts.reduce((s, g) => s + g.chance, 0);
-        let r = Math.random() * total;
-        for (const g of gifts) { r -= g.chance; if (r <= 0) return g; }
-        return gifts[gifts.length - 1];
-      },
-      
-      calcLevel(xp) {
-        for (let i = LEVELS.length - 1; i >= 0; i--) {
-          if (xp >= LEVELS[i].xp) return LEVELS[i].level;
+        // --- دالة تغيير سكن الصاروخ ---
+        function changeSkin(element, src) {
+            document.querySelectorAll('.skin-btn').forEach(btn => btn.classList.remove('active'));
+            element.classList.add('active');
+            document.getElementById('rocket-img').src = src;
         }
-        return 1;
-      },
-      
-      nextLevelXP(level) {
-        const found = LEVELS.find(l => l.level === level + 1);
-        return found ? found.xp : LEVELS[LEVELS.length - 1].xp;
-      },
-      
-      curLevelXP(level) {
-        const found = LEVELS.find(l => l.level === level);
-        return found ? found.xp : 0;
-      },
-      
-      haptic() {
-        try { Telegram.WebApp.HapticFeedback.impactOccurred('medium'); } catch(e) {}
-      },
-      
-      delay(ms) { return new Promise(r => setTimeout(r, ms)); },
-    };
 
-    // ==================== TELEGRAM ====================
-    const TG = {
-      init() {
-        try {
-          if (Telegram?.WebApp) {
-            Telegram.WebApp.ready();
-            Telegram.WebApp.expand();
-            
-            const u = Telegram.WebApp.initDataUnsafe?.user;
-            if (u) {
-              STATE.user.id = u.id;
-              STATE.user.name = u.first_name + (u.last_name ? ' ' + u.last_name : '');
-              if (u.photo_url) this.setAvatar(u.photo_url);
+        function adjustBet(amount) {
+            let current = parseFloat(betInput.value);
+            let newVal = current + amount;
+            if(newVal < 0.5) newVal = 0.5;
+            betInput.value = newVal.toFixed(2);
+        }
+
+        // --- تحديث الرصيد ---
+        function updateBalance(amount) {
+            balance += amount;
+            balanceDisplay.innerText = balance.toFixed(2);
+        }
+
+        // --- زر الأكشن (رهان / سحب) ---
+        function handleAction() {
+            if (gameState === 'waiting' && userStatus === 'none') {
+                // وضع رهان
+                let bet = parseFloat(betInput.value);
+                if (bet > balance) { alert("رصيد غير كافٍ!"); return; }
+                
+                betAmount = bet;
+                updateBalance(-betAmount);
+                userStatus = 'bet_placed';
+                
+                actionBtn.innerText = "في الانتظار...";
+                actionBtn.className = "btn-action waiting";
+                
+            } else if (gameState === 'flying' && userStatus === 'bet_placed') {
+                // سحب الأرباح (Cashout)
+                let winAmount = betAmount * currentMultiplier;
+                updateBalance(winAmount);
+                userStatus = 'cashed_out';
+                
+                actionBtn.innerText = `ربحت ${winAmount.toFixed(2)} 💎`;
+                actionBtn.className = "btn-action cashed";
             }
-          }
-        } catch(e) {}
-      },
-      
-      setAvatar(url) {
-        document.querySelectorAll('#user-avatar, #profile-avatar').forEach(el => {
-          el.innerHTML = `<img src="${url}" class="w-full h-full object-cover" alt="">`;
-        });
-      },
-      
-      avatarUrl(name) {
-        return `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=0098ea&color=fff&size=100`;
-      }
-    };
+        }
 
-    // ==================== COMPONENTS ====================
-    const Header = {
-      render() {
-        document.getElementById('user-name').textContent = STATE.user.name;
-        document.getElementById('profile-name').textContent = STATE.user.name;
-        document.getElementById('balance').textContent = Utils.fmt(STATE.user.balance);
-        
-        if (!document.querySelector('#user-avatar img')) {
-          const url = TG.avatarUrl(STATE.user.name);
-          document.getElementById('user-avatar').innerHTML = `<img src="${url}" class="w-full h-full object-cover">`;
-          document.getElementById('profile-avatar').innerHTML = `<img src="${url}" class="w-full h-full object-cover">`;
+        // --- توليد نقطة الانفجار (نفس خوارزميات الكازينو) ---
+        function generateCrashPoint() {
+            // احتمالية 5% يطك فوراً على 1.00
+            if (Math.random() < 0.05) return 1.00;
+            // معادلة تعطي أرقام عشوائية (الأغلب بين 1 و 3، وقليل يوصل عالي)
+            return Math.max(1.01, (0.99 / Math.random())).toFixed(2);
         }
-      }
-    };
 
-    const LiveDrops = {
-      render() {
-        const drops = [
-          { user: 'أحمد', emoji: '💎', value: 5000 },
-          { user: 'محمد', emoji: '🐸', value: 8000 },
-          { user: 'علي', emoji: '🚀', value: 2000 },
-          { user: 'حسين', emoji: '👑', value: 1500 },
-          { user: 'يوسف', emoji: '⭐', value: 800 },
-          { user: 'عمر', emoji: '🎁', value: 500 },
-        ];
-        const all = [...drops, ...drops];
-        document.getElementById('live-drops').innerHTML = all.map(d => `
-          <div class="inline-flex items-center gap-2 px-4 py-1 mx-2 rounded-full bg-[var(--bg-card)] border border-white/5">
-            <span class="text-lg">${d.emoji}</span>
-            <span class="text-sm text-[var(--text-muted)]">${d.user}</span>
-            <span class="text-sm font-bold text-[var(--accent-gold)]">${d.value} TON</span>
-          </div>
-        `).join('');
-      }
-    };
+        // --- إضافة للهستري ---
+        function addToHistory(multiplier) {
+            let badge = document.createElement('div');
+            badge.innerText = multiplier + "x";
+            badge.className = parseFloat(multiplier) >= 2.0 ? "h-badge good" : "h-badge bad";
+            historyBar.prepend(badge);
+            if (historyBar.children.length > 10) historyBar.removeChild(historyBar.lastChild);
+        }
 
-    const Profile = {
-      render() {
-        document.getElementById('level').textContent = STATE.user.level;
-        document.getElementById('xp').textContent = STATE.user.xp;
-        
-        const nextXP = Utils.nextLevelXP(STATE.user.level);
-        const curXP = Utils.curLevelXP(STATE.user.level);
-        document.getElementById('next-xp').textContent = nextXP;
-        
-        const pct = ((STATE.user.xp - curXP) / (nextXP - curXP)) * 100;
-        document.getElementById('xp-bar').style.width = Math.min(100, Math.max(0, pct)) + '%';
-        
-        this.renderGifts();
-      },
-      
-      renderGifts() {
-        const el = document.getElementById('user-gifts');
-        if (!STATE.user.gifts.length) {
-          el.innerHTML = '<p class="col-span-3 text-center text-[var(--text-muted)] py-8">لا توجد هدايا</p>';
-          return;
-        }
-        
-        el.innerHTML = STATE.user.gifts.map((g, i) => `
-          <div class="gift-item glass rounded-xl p-2 text-center card-hover" data-idx="${i}">
-            <div class="text-2xl mb-1">${g.emoji}</div>
-            <p class="text-xs text-[var(--text-muted)] truncate">${g.name}</p>
-            <p class="text-xs font-bold text-[var(--accent-gold)]">${g.value}</p>
-          </div>
-        `).join('');
-        
-        el.querySelectorAll('.gift-item').forEach(item => {
-          item.addEventListener('click', () => {
-            const idx = parseInt(item.dataset.idx);
-            this.sellGift(idx);
-          });
-        });
-      },
-      
-      sellGift(idx) {
-        const g = STATE.user.gifts[idx];
-        if (!g) return;
-        STATE.user.balance += g.value;
-        STATE.user.gifts.splice(idx, 1);
-        Header.render();
-        this.renderGifts();
-        Utils.haptic();
-      },
-      
-      sellAll() {
-        const total = STATE.user.gifts.reduce((s, g) => s + g.value, 0);
-        if (!total) { alert('لا توجد هدايا'); return; }
-        STATE.user.balance += total;
-        STATE.user.gifts = [];
-        Header.render();
-        this.renderGifts();
-        Utils.haptic();
-        alert(`تم بيع ${total} TON`);
-      },
-      
-      claimReward() {
-        const lvl = STATE.user.level;
-        const gift = GIFTS.find(g => g.value >= lvl * 100) || GIFTS[5];
-        STATE.user.gifts.push({...gift});
-        this.renderGifts();
-        alert(`حصلت على ${gift.emoji} ${gift.name}`);
-        Utils.haptic();
-      },
-      
-      copyInvite() {
-        const link = `https://t.me/YourBot?start=ref_${STATE.user.id || 'guest'}`;
-        if (navigator.clipboard) {
-          navigator.clipboard.writeText(link);
-          alert('تم نسخ رابط الدعوة');
-        }
-        Utils.haptic();
-      },
-      
-      bind() {
-        document.getElementById('rewards-btn').onclick = () => this.claimReward();
-        document.getElementById('invites-btn').onclick = () => this.copyInvite();
-        document.getElementById('sell-all-btn').onclick = () => this.sellAll();
-      }
-    };
+        // --- المحرك الرئيسي للعبة (Game Loop) ---
+        function startRound() {
+            gameState = 'waiting';
+            currentMultiplier = 1.00;
+            animationTime = 0;
+            crashPoint = generateCrashPoint(); // تحديد نقطة الانفجار بالسر
+            
+            rocket.style.display = 'none';
+            flightPath.setAttribute('d', '');
+            multiText.style.color = 'var(--text-main)';
+            statusText.innerText = "NEXT ROUND IN";
+            
+            if (userStatus !== 'bet_placed') {
+                actionBtn.innerText = "ضع مبلغك (Bet)";
+                actionBtn.className = "btn-action";
+                userStatus = 'none';
+            }
 
-    const Cases = {
-      render() {
-        document.getElementById('cases-grid').innerHTML = CASES.map(c => `
-          <button class="glass rounded-2xl p-4 card-hover" data-cid="${c.id}">
-            <div class="w-full aspect-square rounded-xl bg-[var(--bg-elevated)] mb-3 flex items-center justify-center relative overflow-hidden">
-              <div class="absolute inset-0 opacity-30" style="background: radial-gradient(circle, ${c.color}40, transparent 70%)"></div>
-              <span class="text-4xl relative z-10">${c.icon}</span>
-            </div>
-            <p class="font-arabic font-bold text-sm">${c.name}</p>
-            <p class="text-[var(--accent-gold)] font-bold text-sm mt-1">${c.price} TON</p>
-          </button>
-        `).join('');
-        
-        document.querySelectorAll('#cases-grid button').forEach(btn => {
-          btn.onclick = () => this.openModal(parseInt(btn.dataset.cid));
-        });
-      },
-      
-      openModal(cid) {
-        const c = CASES.find(x => x.id === cid);
-        if (!c) return;
-        
-        STATE.ui.selectedCase = c;
-        STATE.ui.caseMultiplier = 1;
-        
-        document.querySelectorAll('.case-multi').forEach(btn => {
-          btn.classList.remove('active', 'bg-[var(--accent-blue)]');
-          btn.classList.add('bg-[var(--bg-elevated)]');
-          if (btn.dataset.m === '1') {
-            btn.classList.add('active', 'bg-[var(--accent-blue)]');
-            btn.classList.remove('bg-[var(--bg-elevated)]');
-          }
-        });
-        
-        document.getElementById('modal-case-icon').innerHTML = `<span class="text-4xl">${c.icon}</span>`;
-        document.getElementById('modal-case-name').textContent = c.name;
-        document.getElementById('modal-case-price').textContent = c.price + ' TON';
-        this.updateTotal();
-        
-        document.getElementById('case-modal').classList.remove('hidden');
-        Utils.haptic();
-      },
-      
-      closeModal() {
-        document.getElementById('case-modal').classList.add('hidden');
-      },
-      
-      updateTotal() {
-        if (!STATE.ui.selectedCase) return;
-        const total = STATE.ui.selectedCase.price * STATE.ui.caseMultiplier;
-        document.getElementById('modal-total').textContent = total + ' TON';
-      },
-      
-      openCase() {
-        const c = STATE.ui.selectedCase;
-        if (!c) return;
-        
-        const total = c.price * STATE.ui.caseMultiplier;
-        if (STATE.user.balance < total) {
-          alert('رصيد غير كافي');
-          return;
+            // عداد الانتظار (5 ثواني)
+            let countdown = 5.0;
+            let waitInterval = setInterval(() => {
+                countdown -= 0.1;
+                multiText.innerText = countdown.toFixed(1);
+                
+                if (countdown <= 0) {
+                    clearInterval(waitInterval);
+                    launchRocket();
+                }
+            }, 100);
         }
-        
-        STATE.user.balance -= total;
-        Header.render();
-        this.closeModal();
-        
-        const won = [];
-        for (let i = 0; i < STATE.ui.caseMultiplier; i++) {
-          const g = Utils.weightedPick(c.gifts);
-          won.push({...g});
-          STATE.user.gifts.push({...g});
-        }
-        
-        const totalVal = won.reduce((s, g) => s + g.value, 0);
-        STATE.user.xp += Math.floor(totalVal / 10);
-        STATE.user.level = Utils.calcLevel(STATE.user.xp);
-        
-        Profile.render();
-        this.showResult(won, totalVal);
-        Utils.haptic();
-      },
-      
-      showResult(gifts, val) {
-        const g = gifts[0];
-        document.getElementById('result-icon').innerHTML = `<span class="text-5xl">${g.emoji}</span>`;
-        document.getElementById('result-title').textContent = gifts.length > 1 ? `مبروك! ${gifts.length} هدايا` : 'مبروك!';
-        document.getElementById('result-name').textContent = gifts.length > 1 ? `${g.name} وغيرها` : g.name;
-        document.getElementById('result-value').textContent = val + ' TON';
-        document.getElementById('result-modal').classList.remove('hidden');
-      },
-      
-      bind() {
-        document.querySelectorAll('.case-multi').forEach(btn => {
-          btn.onclick = () => {
-            document.querySelectorAll('.case-multi').forEach(b => {
-              b.classList.remove('active', 'bg-[var(--accent-blue)]');
-              b.classList.add('bg-[var(--bg-elevated)]');
-            });
-            btn.classList.add('active', 'bg-[var(--accent-blue)]');
-            btn.classList.remove('bg-[var(--bg-elevated)]');
-            STATE.ui.caseMultiplier = parseInt(btn.dataset.m);
-            this.updateTotal();
-            Utils.haptic();
-          };
-        });
-        
-        document.getElementById('case-modal-bg').onclick = () => this.closeModal();
-        document.getElementById('open-case-btn').onclick = () => this.openCase();
-        document.getElementById('result-close').onclick = () => {
-          document.getElementById('result-modal').classList.add('hidden');
-        };
-      }
-    };
 
-    const Upgrade = {
-      render() {
-        const el = document.getElementById('upgrade-select');
-        if (!STATE.user.gifts.length) {
-          el.innerHTML = '<p class="col-span-4 text-center text-[var(--text-muted)] py-4">لا توجد هدايا</p>';
-          return;
-        }
-        
-        el.innerHTML = STATE.user.gifts.map((g, i) => `
-          <button class="glass rounded-xl p-2 text-center card-hover" data-idx="${i}">
-            <div class="text-2xl">${g.emoji}</div>
-            <p class="text-xs text-[var(--accent-gold)]">${g.value}</p>
-          </button>
-        `).join('');
-        
-        el.querySelectorAll('button').forEach(btn => {
-          btn.onclick = () => this.selectGift(parseInt(btn.dataset.idx));
-        });
-      },
-      
-      selectGift(idx) {
-        STATE.ui.upgradeGift = STATE.user.gifts[idx];
-        STATE.ui.upgradeGiftIdx = idx;
-        this.renderTargets();
-        Utils.haptic();
-      },
-      
-      renderTargets() {
-        const minVal = STATE.ui.upgradeGift.value;
-        const targets = GIFTS.filter(g => g.value > minVal);
-        
-        document.getElementById('upgrade-targets').innerHTML = targets.map(g => `
-          <button class="glass rounded-xl p-3 text-center card-hover" data-gid="${g.id}">
-            <div class="text-3xl mb-1">${g.emoji}</div>
-            <p class="text-sm font-arabic">${g.name}</p>
-            <p class="text-sm text-[var(--accent-gold)] font-bold">${g.value} TON</p>
-            <p class="text-xs text-[var(--accent-green)] mt-1">${this.chance(minVal, g.value)}%</p>
-          </button>
-        `).join('');
-        
-        document.getElementById('upgrade-targets-container').classList.remove('hidden');
-        
-        document.querySelectorAll('#upgrade-targets button').forEach(btn => {
-          btn.onclick = () => this.selectTarget(parseInt(btn.dataset.gid));
-        });
-      },
-      
-      chance(from, to) {
-        return Math.max(5, Math.min(80, Math.floor(100 / (to / from))));
-      },
-      
-      selectTarget(gid) {
-        STATE.ui.upgradeTarget = GIFTS.find(g => g.id === gid);
-        const c = this.chance(STATE.ui.upgradeGift.value, STATE.ui.upgradeTarget.value);
-        document.getElementById('upgrade-chance').textContent = c + '%';
-        document.getElementById('upgrade-action').classList.remove('hidden');
-        Utils.haptic();
-      },
-      
-      doUpgrade() {
-        const c = this.chance(STATE.ui.upgradeGift.value, STATE.ui.upgradeTarget.value);
-        const roll = Math.random() * 100;
-        
-        STATE.user.gifts.splice(STATE.ui.upgradeGiftIdx, 1);
-        
-        if (roll <= c) {
-          STATE.user.gifts.push({...STATE.ui.upgradeTarget});
-          alert(`ربحت ${STATE.ui.upgradeTarget.emoji} ${STATE.ui.upgradeTarget.name}!`);
-        } else {
-          alert('خسرت! حظ أوفر');
-        }
-        
-        STATE.ui.upgradeGift = null;
-        STATE.ui.upgradeTarget = null;
-        document.getElementById('upgrade-targets-container').classList.add('hidden');
-        document.getElementById('upgrade-action').classList.add('hidden');
-        this.render();
-        Profile.render();
-        Utils.haptic();
-      },
-      
-      bind() {
-        document.getElementById('upgrade-btn').onclick = () => this.doUpgrade();
-      }
-    };
+        function launchRocket() {
+            gameState = 'flying';
+            statusText.innerText = "CURRENT PAYOUT";
+            rocket.style.display = 'block';
+            document.getElementById('rocket-img').src = document.querySelector('.skin-btn.active img').src; // إرجاع الصورة الأصلية إذا كانت منفجرة
+            
+            if (userStatus === 'bet_placed') {
+                actionBtn.innerText = "سحب (Cashout)";
+                actionBtn.className = "btn-action";
+            }
 
-    const Rocket = {
-      stars: '',
-      
-      init() {
-        this.stars = '';
-        for (let i = 0; i < 50; i++) {
-          const x = Math.random() * 100;
-          const y = Math.random() * 100;
-          const s = Math.random() * 2 + 1;
-          this.stars += `<div class="absolute rounded-full bg-white" style="left:${x}%;top:${y}%;width:${s}px;height:${s}px;opacity:${Math.random() * 0.5 + 0.2}"></div>`;
-        }
-        document.getElementById('stars').innerHTML = this.stars;
-        this.renderHistory();
-      },
-      
-      renderHistory() {
-        document.getElementById('rocket-history').innerHTML = STATE.rocket.history.map(v => {
-          const win = v >= 2;
-          return `<div class="flex-shrink-0 px-3 py-1.5 rounded-lg font-bold text-sm ${win ? 'bg-[var(--accent-green)]/20 text-[var(--accent-green)]' : 'bg-[var(--accent-red)]/20 text-[var(--accent-red)]'}">${v.toFixed(2)}x</div>`;
-        }).join('');
-      },
-      
-      bind() {
-        document.getElementById('rocket-minus').onclick = () => {
-          STATE.rocket.amount = Math.max(0.5, STATE.rocket.amount - 0.5);
-          document.getElementById('rocket-amount').value = Utils.fmt(STATE.rocket.amount);
-          Utils.haptic();
-        };
-        
-        document.getElementById('rocket-plus').onclick = () => {
-          STATE.rocket.amount = Math.min(100, STATE.rocket.amount + 0.5);
-          document.getElementById('rocket-amount').value = Utils.fmt(STATE.rocket.amount);
-          Utils.haptic();
-        };
-        
-        document.querySelectorAll('.rocket-quick-btn').forEach(btn => {
-          btn.onclick = () => {
-            STATE.rocket.amount = parseFloat(btn.dataset.amount);
-            document.getElementById('rocket-amount').value = Utils.fmt(STATE.rocket.amount);
-            Utils.haptic();
-          };
-        });
-        
-        document.getElementById('rocket-bet').onclick = () => this.bet();
-        document.getElementById('rocket-cashout').onclick = () => this.cashout();
-      },
-      
-      bet() {
-        if (STATE.rocket.playing) return;
-        if (STATE.user.balance < STATE.rocket.amount) {
-          alert('رصيد غير كافي');
-          return;
-        }
-        
-        STATE.user.balance -= STATE.rocket.amount;
-        Header.render();
-        
-        STATE.rocket.playing = true;
-        STATE.rocket.hasBet = true;
-        STATE.rocket.crashPoint = Utils.crashPoint();
-        STATE.rocket.multiplier = 1.00;
-        
-        document.getElementById('rocket-bet').disabled = true;
-        document.getElementById('rocket-bet').classList.add('opacity-50');
-        document.getElementById('rocket-cashout').disabled = false;
-        document.getElementById('rocket-cashout').classList.remove('opacity-50');
-        
-        this.start();
-        Utils.haptic();
-      },
-      
-      start() {
-        document.getElementById('rocket-idle').classList.add('hidden');
-        document.getElementById('rocket-crashed').classList.add('hidden');
-        document.getElementById('rocket-flying').classList.remove('hidden');
-        
-        const mEl = document.getElementById('rocket-multiplier');
-        mEl.className = 'text-6xl font-black text-[var(--accent-green)] animate-multiplier';
-        
-        let elapsed = 0;
-        STATE.rocket.interval = setInterval(() => {
-          elapsed += 0.1;
-          const growth = Math.pow(Math.E, elapsed * 0.12);
-          STATE.rocket.multiplier = Math.min(growth, STATE.rocket.crashPoint);
-          mEl.textContent = Utils.fmt(STATE.rocket.multiplier) + 'x';
-          
-          if (STATE.rocket.multiplier >= STATE.rocket.crashPoint) {
-            this.crash();
-          }
-        }, 100);
-      },
-      
-      cashout() {
-        if (!STATE.rocket.playing || !STATE.rocket.hasBet) return;
-        
-        clearInterval(STATE.rocket.interval);
-        
-        const win = STATE.rocket.amount * STATE.rocket.multiplier;
-        STATE.user.balance += win;
-        Header.render();
-        
-        STATE.rocket.history.unshift(STATE.rocket.multiplier);
-        STATE.rocket.history = STATE.rocket.history.slice(0, 15);
-        this.renderHistory();
-        
-        alert(`ربحت ${Utils.fmt(win)} TON!`);
-        this.reset(true);
-        Utils.haptic();
-      },
-      
-      crash() {
-        clearInterval(STATE.rocket.interval);
-        
-        document.getElementById('rocket-flying').classList.add('hidden');
-        document.getElementById('rocket-crashed').classList.remove('hidden');
-        
-        const mEl = document.getElementById('rocket-multiplier');
-        mEl.textContent = Utils.fmt(STATE.rocket.multiplier) + 'x';
-        mEl.className = 'text-6xl font-black text-[var(--accent-red)] animate-crash';
-        
-        STATE.rocket.history.unshift(STATE.rocket.multiplier);
-        STATE.rocket.history = STATE.rocket.history.slice(0, 15);
-        this.renderHistory();
-        
-        setTimeout(() => this.reset(false), 2000);
-        Utils.haptic();
-      },
-      
-      reset(won) {
-        STATE.rocket.playing = false;
-        STATE.rocket.hasBet = false;
-        STATE.rocket.multiplier = 1.00;
-        
-        document.getElementById('rocket-bet').disabled = false;
-        document.getElementById('rocket-bet').classList.remove('opacity-50');
-        document.getElementById('rocket-cashout').disabled = true;
-        document.getElementById('rocket-cashout').classList.add('opacity-50');
-        
-        const mEl = document.getElementById('rocket-multiplier');
-        mEl.textContent = '1.00x';
-        mEl.className = 'text-6xl font-black text-[var(--accent-blue)]';
-        
-        document.getElementById('rocket-idle').classList.remove('hidden');
-        document.getElementById('rocket-flying').classList.add('hidden');
-        document.getElementById('rocket-crashed').classList.add('hidden');
-      }
-    };
+            // بداية الإقلاع
+            gameInterval = setInterval(() => {
+                animationTime += 0.05;
+                // زيادة المضاعف (Multiplier) بشكل أسي بسيط
+                currentMultiplier += 0.005 * Math.pow(animationTime, 1.5);
+                
+                multiText.innerText = currentMultiplier.toFixed(2) + "x";
 
-    const PVP = {
-      bind() {
-        document.getElementById('create-pvp-btn').onclick = () => this.create();
-        document.getElementById('join-pvp-btn').onclick = () => this.join();
-        document.getElementById('gift-modal-bg').onclick = () => {
-          document.getElementById('gift-modal').classList.add('hidden');
-        };
-      },
-      
-      create() {
-        STATE.pvp.active = true;
-        STATE.pvp.timer = 25;
-        STATE.pvp.participants = [{
-          id: STATE.user.id || 'p1',
-          name: STATE.user.name,
-          contribution: 0,
-          gifts: [],
-        }];
-        STATE.pvp.totalPrize = 0;
-        
-        document.getElementById('pvp-status').classList.add('hidden');
-        document.getElementById('pvp-active').classList.remove('hidden');
-        document.getElementById('pvp-timer').textContent = '25';
-        
-        this.renderParticipants();
-        this.startTimer();
-        Utils.haptic();
-      },
-      
-      startTimer() {
-        STATE.pvp.interval = setInterval(() => {
-          STATE.pvp.timer--;
-          document.getElementById('pvp-timer').textContent = STATE.pvp.timer;
-          
-          if (STATE.pvp.timer <= 4) {
-            document.getElementById('join-pvp-btn').disabled = true;
-            document.getElementById('join-pvp-btn').classList.add('opacity-50');
-          }
-          
-          if (STATE.pvp.timer <= 0) {
-            clearInterval(STATE.pvp.interval);
-            this.spin();
-          }
-        }, 1000);
-      },
-      
-      renderParticipants() {
-        document.getElementById('pvp-participants').innerHTML = STATE.pvp.participants.map(p => `
-          <div class="flex items-center justify-between glass rounded-xl p-2">
-            <div class="flex items-center gap-2">
-              <div class="w-8 h-8 rounded-full bg-[var(--bg-elevated)] flex items-center justify-center font-bold text-sm">${p.name.charAt(0)}</div>
-              <span class="text-sm">${p.name}</span>
-            </div>
-            <span class="text-[var(--accent-gold)] font-bold">${p.contribution} TON</span>
-          </div>
-        `).join('');
-      },
-      
-      join() {
-        if (!STATE.user.gifts.length) {
-          alert('لا توجد هدايا');
-          return;
-        }
-        
-        document.getElementById('gift-grid').innerHTML = STATE.user.gifts.map((g, i) => `
-          <button class="glass rounded-xl p-3 text-center card-hover" data-idx="${i}">
-            <div class="text-2xl mb-1">${g.emoji}</div>
-            <p class="text-xs text-[var(--text-muted)]">${g.name}</p>
-            <p class="text-xs text-[var(--accent-gold)] font-bold">${g.value}</p>
-          </button>
-        `).join('');
-        
-        document.getElementById('gift-modal').classList.remove('hidden');
-        
-        document.querySelectorAll('#gift-grid button').forEach(btn => {
-          btn.onclick = () => {
-            this.addGift(parseInt(btn.dataset.idx));
-            document.getElementById('gift-modal').classList.add('hidden');
-          };
-        });
-        
-        Utils.haptic();
-      },
-      
-      addGift(idx) {
-        const g = STATE.user.gifts[idx];
-        const p = STATE.pvp.participants.find(x => x.id === (STATE.user.id || 'p1'));
-        
-        if (p) {
-          p.gifts.push(g);
-          p.contribution += g.value;
-          STATE.pvp.totalPrize += g.value;
-        }
-        
-        STATE.user.gifts.splice(idx, 1);
-        Profile.render();
-        this.renderParticipants();
-        Utils.haptic();
-      },
-      
-      spin() {
-        if (STATE.pvp.participants.length < 2 || STATE.pvp.totalPrize === 0) {
-          alert('لا يوجد مشاركين كافيين');
-          this.reset();
-          return;
-        }
-        
-        document.getElementById('pvp-wheel-container').classList.remove('hidden');
-        
-        const total = STATE.pvp.participants.reduce((s, p) => s + p.contribution, 0);
-        const r = Math.random() * total;
-        let cum = 0;
-        let winnerIdx = 0;
-        
-        for (let i = 0; i < STATE.pvp.participants.length; i++) {
-          cum += STATE.pvp.participants[i].contribution;
-          if (r <= cum) { winnerIdx = i; break; }
-        }
-        
-        const winner = STATE.pvp.participants[winnerIdx];
-        
-        setTimeout(() => {
-          if (winner.id === (STATE.user.id || 'p1')) {
-            STATE.user.balance += STATE.pvp.totalPrize;
-            Header.render();
-          }
-          alert(`الفائز: ${winner.name}\nربح ${STATE.pvp.totalPrize} TON`);
-          this.reset();
-        }, 4000);
-        
-        Utils.haptic();
-      },
-      
-      reset() {
-        STATE.pvp.active = false;
-        STATE.pvp.participants = [];
-        STATE.pvp.timer = 25;
-        STATE.pvp.totalPrize = 0;
-        
-        document.getElementById('pvp-status').classList.remove('hidden');
-        document.getElementById('pvp-active').classList.add('hidden');
-        document.getElementById('pvp-wheel-container').classList.add('hidden');
-        document.getElementById('join-pvp-btn').disabled = false;
-        document.getElementById('join-pvp-btn').classList.remove('opacity-50');
-      }
-    };
+                // حركة الصاروخ ورسم الخط
+                let startX = window.innerWidth * 0.1;
+                let startY = window.innerHeight * 0.8;
+                
+                // معادلة المنحنى
+                let currentX = startX + (animationTime * 30);
+                let currentY = startY - (Math.pow(animationTime, 1.8) * 5);
+                
+                // منع الصاروخ من الخروج من الشاشة
+                if(currentY < 100) currentY = 100;
+                if(currentX > window.innerWidth * 0.8) currentX = window.innerWidth * 0.8;
 
-    const Contract = {
-      render() {
-        const el = document.getElementById('contract-select');
-        if (!STATE.user.gifts.length) {
-          el.innerHTML = '<p class="col-span-4 text-center text-[var(--text-muted)] py-4">لا توجد هدايا</p>';
-          return;
-        }
-        
-        el.innerHTML = STATE.user.gifts.map((g, i) => {
-          const sel = STATE.ui.contractGifts.includes(i);
-          return `
-            <button class="glass rounded-xl p-2 text-center card-hover ${sel ? 'ring-2 ring-[var(--accent-blue)]' : ''}" data-idx="${i}">
-              <div class="text-2xl">${g.emoji}</div>
-              <p class="text-xs text-[var(--accent-gold)]">${g.value}</p>
-            </button>
-          `;
-        }).join('');
-        
-        el.querySelectorAll('button').forEach(btn => {
-          btn.onclick = () => this.toggle(parseInt(btn.dataset.idx));
-        });
-        
-        document.getElementById('contract-count').textContent = STATE.ui.contractGifts.length;
-        this.checkMode();
-      },
-      
-      toggle(idx) {
-        const i = STATE.ui.contractGifts.indexOf(idx);
-        if (i > -1) {
-          STATE.ui.contractGifts.splice(i, 1);
-        } else if (STATE.ui.contractGifts.length < 10) {
-          STATE.ui.contractGifts.push(idx);
-        }
-        this.render();
-        Utils.haptic();
-      },
-      
-      checkMode() {
-        const len = STATE.ui.contractGifts.length;
-        if (len >= 3 && len <= 10) {
-          document.getElementById('contract-modes').classList.remove('hidden');
-        } else {
-          document.getElementById('contract-modes').classList.add('hidden');
-        }
-      },
-      
-      play(mode) {
-        const total = STATE.ui.contractGifts.reduce((s, i) => s + STATE.user.gifts[i].value, 0);
-        
-        let chance, mult;
-        switch(mode) {
-          case 'safe': chance = 70; mult = 1.3; break;
-          case 'medium': chance = 50; mult = 2; break;
-          case 'risk': chance = 25; mult = 4; break;
-        }
-        
-        STATE.ui.contractGifts.sort((a, b) => b - a).forEach(i => {
-          STATE.user.gifts.splice(i, 1);
-        });
-        STATE.ui.contractGifts = [];
-        
-        const roll = Math.random() * 100;
-        
-        if (roll <= chance) {
-          const win = total * mult;
-          STATE.user.balance += win;
-          Header.render();
-          alert(`ربحت ${Utils.fmt(win)} TON!`);
-        } else {
-          alert('خسرت! حظ أوفر');
-        }
-        
-        document.getElementById('contract-modes').classList.add('hidden');
-        this.render();
-        Profile.render();
-        Utils.haptic();
-      },
-      
-      bind() {
-        document.querySelectorAll('.contract-mode').forEach(btn => {
-          btn.onclick = () => this.play(btn.dataset.mode);
-        });
-      }
-    };
+                rocket.style.transform = `translate(${currentX - startX}px, ${currentY - startY}px)`;
+                
+                // رسم مسار الطيران (SVG)
+                let pathD = `M ${startX+20} ${startY+20} Q ${currentX} ${startY} ${currentX+20} ${currentY+40}`;
+                flightPath.setAttribute('d', pathD);
 
-    const Nav = {
-      bind() {
-        document.querySelectorAll('.nav-item').forEach(item => {
-          item.onclick = () => {
-            const view = item.dataset.view;
-            this.switch(view);
-            Utils.haptic();
-          };
-        });
-      },
-      
-      switch(view) {
-        STATE.ui.currentView = view;
-        
-        document.querySelectorAll('.nav-item').forEach(item => {
-          item.classList.toggle('active', item.dataset.view === view);
-        });
-        
-        document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-        document.getElementById('view-' + view).classList.add('active');
-        
-        if (view === 'upgrade') Upgrade.render();
-        if (view === 'contract') Contract.render();
-      }
-    };
+                // فحص الانفجار
+                if (currentMultiplier >= crashPoint) {
+                    crashRocket();
+                }
 
-    // ==================== INIT ====================
-    const App = {
-      async init() {
-        await Utils.delay(2500);
-        
-        document.getElementById('loading-screen').style.opacity = '0';
-        document.getElementById('loading-screen').style.visibility = 'hidden';
-        document.getElementById('app').classList.remove('hidden');
-        
-        TG.init();
-        
-        Header.render();
-        LiveDrops.render();
-        Profile.render();
-        Profile.bind();
-        Cases.render();
-        Cases.bind();
-        Upgrade.render();
-        Upgrade.bind();
-        Rocket.init();
-        Rocket.bind();
-        PVP.bind();
-        Contract.render();
-        Contract.bind();
-        Nav.bind();
-      }
-    };
+            }, 30);
+        }
 
-    document.addEventListener('DOMContentLoaded', () => App.init());
-  </script>
+        function crashRocket() {
+            clearInterval(gameInterval);
+            gameState = 'crashed';
+            
+            multiText.style.color = 'var(--danger)';
+            statusText.innerText = "CRASHED AT";
+            document.getElementById('rocket-img').src = 'https://cdn-icons-png.flaticon.com/512/1046/1046784.png'; // صورة انفجار
+            
+            addToHistory(currentMultiplier.toFixed(2));
+
+            // إذا اللاعب ما سحب، يخسر
+            if (userStatus === 'bet_placed') {
+                actionBtn.innerText = "خسرت!";
+                actionBtn.className = "btn-action waiting";
+                userStatus = 'none';
+            }
+
+            // انتظار 3 ثواني ثم بدء جولة جديدة
+            setTimeout(startRound, 3000);
+        }
+
+        // تشغيل اللعبة لأول مرة
+        startRound();
+
+    </script>
 </body>
 </html>
