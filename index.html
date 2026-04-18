@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>مساعد الشطرنج - الإصدار الأسطوري ♚ (أوفلاين)</title>
+    <title>مساعد الشطرنج الأسطوري ♚ (النسخة النهائية)</title>
     <link rel="stylesheet" href="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css">
     <style>
         body { background-color: #0d0d12; color: #e0e0e0; font-family: 'Segoe UI', Tahoma, sans-serif; text-align: center; margin: 0; padding: 10px; }
@@ -18,7 +18,7 @@
         .option-label { display: block; margin-bottom: 10px; color: #00ffcc; font-weight: bold; }
         select { background: #0d0d12; color: #fff; border: 1px solid #00ffcc; padding: 10px; border-radius: 5px; width: 100%; font-size: 1.1em;}
 
-        #board-container { width: 100%; max-width: 380px; margin: 0 auto 15px auto; box-shadow: 0 0 25px rgba(0, 255, 204, 0.2); border: 2px solid #00ffcc; border-radius: 8px; padding: 5px; background-color: #1a1a24; }
+        #board-container { width: 100%; max-width: 380px; margin: 0 auto 15px auto; box-shadow: 0 0 25px rgba(255, 0, 85, 0.3); border: 2px solid #ff0055; border-radius: 8px; padding: 5px; background-color: #1a1a24; }
         .white-1e1d7 { background-color: #dee3e6; }
         .black-3c85d { background-color: #8a96a3; }
 
@@ -27,7 +27,7 @@
         .btn-redo { border-color: #0088ff; color: #0088ff; }
         .btn-redo:hover { background: #0088ff; color: #fff; box-shadow: 0 0 15px #0088ff; }
 
-        #status-display { margin-top: 10px; font-size: 1em; font-weight: bold; color: #00ffcc; min-height: 60px; padding: 10px; background: rgba(255, 255, 255, 0.05); border-radius: 10px; }
+        #status-display { margin-top: 10px; font-size: 1.1em; font-weight: bold; color: #00ffcc; min-height: 60px; padding: 10px; background: rgba(255, 255, 255, 0.05); border-radius: 10px; }
 
         .highlight-ai-from { background-color: rgba(255, 255, 0, 0.4) !important; }
         .highlight-ai-to { background-color: rgba(0, 255, 204, 0.5) !important; }
@@ -40,7 +40,7 @@
 
     <div id="setup-screen">
         <div class="setup-box">
-            <h2>⚙️ إعدادات اللعبة</h2>
+            <h2>⚙️ إعدادات البطولات</h2>
             <div class="option-group">
                 <span class="option-label">اختر فريقك:</span>
                 <select id="select-team">
@@ -51,21 +51,21 @@
             <div class="option-group">
                 <span class="option-label">مستوى الصعوبة (الذكاء):</span>
                 <select id="select-diff">
-                    <option value="5">جيد (سريع جداً) 🥉</option>
-                    <option value="9">متوسط (أداء متزن) 🥈</option>
-                    <option value="12">عالمي (هجوم كاسح) 🥇</option>
+                    <option value="10">نوب = بوليت (لعب سريع - عمق 10) 🥉</option>
+                    <option value="15">احترافي = عثمان (متوازن - عمق 15) 🥈</option>
+                    <option value="20" selected>مُدمر ماغنوس = عمر (بطيء ومرعب - عمق 20) 💀</option>
                 </select>
             </div>
-            <button class="btn" style="width: 100%; padding: 15px; font-size: 1.1em;" onclick="startGame()">ابدأ اللعبة الآن 🚀</button>
+            <button class="btn" style="width: 100%; padding: 15px; font-size: 1.1em; border-color: #ff0055; color: #ff0055;" onclick="startGame()">ابدأ اللعبة الآن 🚀</button>
         </div>
     </div>
 
-    <h2>♟️ مساعد الشطرنج الأسطوري</h2>
+    <h2>♟️ المساعد المدمر</h2>
     <div id="board-container"><div id="board"></div></div>
-    <div id="status-display">جاري تحميل محرك الذكاء الاصطناعي... ⏳</div>
+    <div id="status-display">جاري تحميل المحرك الأسطوري... ⏳</div>
 
     <div style="margin-top: 10px;">
-        <button id="best-move-btn" class="btn" onclick="getBestMove()" style="display:none;">أوجد أفضل نقلة ⚡</button>
+        <button id="best-move-btn" class="btn" onclick="getBestMove()" style="display:none; border-color: #ff0055; color: #ff0055;">أوجد أفضل نقلة 💀</button>
         <button class="btn" onclick="undoMove()">↩️ رجوع</button>
         <button class="btn btn-redo" onclick="redoMove()">تقديم ↪️</button>
         <button class="btn" onclick="confirmReset()">إعادة ♻️</button>
@@ -81,51 +81,56 @@
         var redoStack = []; 
         var selectedSquare = null;
         var playerTeam = 'w';
-        var difficulty = 9;
+        var difficulty = 20;
+        var engine = null;
         const pieceNames = { 'p': 'جندي', 'n': 'حصان', 'b': 'فيل', 'r': 'قلعة', 'q': 'وزير', 'k': 'ملك' };
 
-        // ==========================================
-        // 🔥 الحل النووي: زراعة محرك Stockfish محلياً
-        // ==========================================
-        var engine = new Worker(URL.createObjectURL(new Blob([
-            "importScripts('https://cdnjs.cloudflare.com/ajax/libs/stockfish.js/10.0.2/stockfish.js');"
-        ], {type: 'application/javascript'})));
+        // حل مشكلة الأمان (CORS) وسحب المحرك بطريقة مضمونة 100%
+        fetch('https://cdnjs.cloudflare.com/ajax/libs/stockfish.js/10.0.2/stockfish.js')
+            .then(response => response.text())
+            .then(scriptText => {
+                var blob = new Blob([scriptText], { type: 'application/javascript' });
+                engine = new Worker(URL.createObjectURL(blob));
 
-        engine.onmessage = function(event) {
-            var line = event.data;
-            
-            // اصطياد أفضل حركة يرسلها المحرك الداخلي
-            if (line && line.indexOf("bestmove") > -1) {
-                var match = line.match(/^bestmove ([a-h][1-8])([a-h][1-8])([qrbn])?/);
-                if (match) {
-                    var fromSq = match[1];
-                    var toSq = match[2];
-                    var promo = match[3] || 'q';
-                    
-                    // تحريك القطعة بأمان تام (بدون مشاكل الجنود)
-                    var moveObj = game.move({ from: fromSq, to: toSq, promotion: promo });
-                    
-                    if (moveObj) {
-                        redoStack = []; 
-                        board.position(game.fen());
-                        removeHighlights();
-                        $(`.square-${moveObj.from}`).addClass('highlight-ai-from');
-                        $(`.square-${moveObj.to}`).addClass('highlight-ai-to');
+                engine.postMessage('uci');
+                engine.postMessage('setoption name Skill Level value 20');
+                engine.postMessage('setoption name Hash value 32');
+                engine.postMessage('isready');
 
-                        let desc = moveObj.captured 
-                            ? `⚔️ هجوم ذكي: الـ <b>${pieceNames[moveObj.piece]}</b> أكل في <b>${moveObj.to}</b>` 
-                            : `✅ نقلة ${difficulty === 12 ? 'عالمية' : 'ذكية'}: الـ <b>${pieceNames[moveObj.piece]}</b> إلى <b>${moveObj.to}</b>`;
-                        
-                        updateGameStatus(desc);
+                engine.onmessage = function(event) {
+                    var line = event.data;
+                    
+                    if (line && line.indexOf("bestmove") > -1) {
+                        var match = line.match(/^bestmove ([a-h][1-8])([a-h][1-8])([qrbn])?/);
+                        if (match) {
+                            var fromSq = match[1];
+                            var toSq = match[2];
+                            var promo = match[3] || 'q';
+                            
+                            var moveObj = game.move({ from: fromSq, to: toSq, promotion: promo });
+                            
+                            if (moveObj) {
+                                redoStack = []; 
+                                board.position(game.fen());
+                                removeHighlights();
+                                $(`.square-${moveObj.from}`).addClass('highlight-ai-from');
+                                $(`.square-${moveObj.to}`).addClass('highlight-ai-to');
+
+                                let desc = moveObj.captured 
+                                    ? `💀 هجوم مدمر: الـ <b>${pieceNames[moveObj.piece]}</b> أكل في <b>${moveObj.to}</b>` 
+                                    : `✅ نقلة عبقرية: الـ <b>${pieceNames[moveObj.piece]}</b> إلى <b>${moveObj.to}</b>`;
+                                
+                                updateGameStatus(desc);
+                            }
+                        }
                     }
-                }
-            }
-        };
+                };
 
-        // إرسال أوامر التهيئة للمحرك
-        engine.postMessage('uci');
-        engine.postMessage('isready');
-        // ==========================================
+                document.getElementById('status-display').innerText = "جاهز لبدء اللعبة!";
+            })
+            .catch(err => {
+                document.getElementById('status-display').innerText = "حدث خطأ في تحميل المحرك، يرجى تحديث الصفحة.";
+            });
 
         var config = { draggable: false, position: 'start', pieceTheme: 'https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png' };
         board = Chessboard('board', config);
@@ -198,21 +203,22 @@
             } else { selectedSquare = null; }
         });
 
-        // استدعاء الذكاء الاصطناعي الداخلي (بدون أي إنترنت أو API)
         function getBestMove() {
-            document.getElementById('status-display').innerText = "جاري التحليل بقوة جهازك... 🧠⚡";
+            if (!engine) {
+                alert("يرجى الانتظار، جاري إكمال تحميل المحرك...");
+                return;
+            }
+
+            if (difficulty === 20) {
+                document.getElementById('status-display').innerText = "جاري التحليل بعمق 20! (قد يستغرق وقتاً حسب جهازك) 🧠💀";
+            } else {
+                document.getElementById('status-display').innerText = "جاري التحليل بقوة جهازك... 🧠⚡";
+            }
             $('#best-move-btn').hide();
 
-            // إرسال حالة الرقعة للمحرك المحلي
             engine.postMessage('position fen ' + game.fen());
-            // إرسال مستوى الصعوبة
             engine.postMessage('go depth ' + difficulty);
         }
-        
-        // تفعيل الزر بمجرد جاهزية الصفحة
-        window.onload = function() {
-            document.getElementById('status-display').innerText = "جاهز لبدء اللعبة!";
-        };
     </script>
 </body>
 </html>
