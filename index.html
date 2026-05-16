@@ -7,109 +7,98 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
     <style>
-        body {
-            background-color: #0d0d0d; color: #fff; font-family: 'Segoe UI', Tahoma, sans-serif;
-            margin: 0; padding: 15px; overflow: hidden; display: flex; flex-direction: column; align-items: center;
-        }
-        .title { color: #00ffcc; text-shadow: 0 0 10px rgba(0, 255, 204, 0.5); font-size: 24px; margin-bottom: 5px; }
-        .pool-amount { font-size: 32px; font-weight: bold; color: #ffcc00; text-shadow: 0 0 15px rgba(255, 204, 0, 0.6); margin-bottom: 20px; }
+        body { background-color: #0d0d0d; color: #fff; font-family: 'Segoe UI', Tahoma, sans-serif; margin: 0; padding: 15px; display: flex; flex-direction: column; align-items: center; }
+        .title { color: #00ffcc; font-size: 24px; font-weight: bold; margin-bottom: 10px; }
+        .balance-box { background: #222; padding: 8px 15px; border-radius: 10px; color: #00ffcc; margin-bottom: 15px; font-weight: bold; }
+        .arena { width: 100%; max-width: 400px; height: 250px; background: #1a1a1a; border-radius: 20px; border: 2px solid #333; display: flex; overflow: hidden; }
+        .player-zone { height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: width 0.5s; border-right: 1px solid rgba(0,0,0,0.3); }
+        .player-photo { width: 50px; height: 50px; border-radius: 50%; border: 2px solid #fff; object-fit: cover; }
+        .player-percent { font-size: 16px; font-weight: bold; margin-top: 5px; }
+        .controls { margin-top: 20px; display: flex; gap: 10px; width: 100%; max-width: 400px; }
+        input { flex: 1; padding: 10px; border-radius: 8px; background: #222; color: #00ffcc; border: 1px solid #444; text-align: center; }
+        button { padding: 10px 20px; border-radius: 8px; background: #00ffcc; color: #000; font-weight: bold; border: none; cursor: pointer; }
         
-        /* حلبة التحدي اللي تتقسم حسب الرهان */
-        .arena {
-            width: 100%; max-width: 400px; height: 300px; background: #1a1a1a; border-radius: 20px;
-            border: 2px solid #333; overflow: hidden; display: flex; position: relative;
-            box-shadow: 0 0 20px rgba(0,0,0,0.8);
-        }
-        .player-zone {
-            height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center;
-            transition: width 0.8s cubic-bezier(0.25, 1, 0.5, 1); position: relative; border-right: 1px solid rgba(0,0,0,0.3);
-        }
-        .player-photo {
-            width: 60px; height: 60px; border-radius: 50%; border: 3px solid #fff;
-            box-shadow: 0 0 15px rgba(255,255,255,0.4); z-index: 2; object-fit: cover;
-        }
-        .player-name { font-size: 12px; font-weight: bold; margin-top: 8px; z-index: 2; text-shadow: 1px 1px 2px #000; }
-        .player-percent { font-size: 18px; font-weight: bold; margin-top: 5px; z-index: 2; text-shadow: 1px 1px 2px #000; }
-        
-        .controls { margin-top: 30px; display: flex; gap: 10px; width: 100%; max-width: 400px; }
-        input {
-            flex: 1; padding: 15px; border-radius: 12px; border: 1px solid #444; background: #222; color: #00ffcc;
-            font-size: 16px; text-align: center; outline: none;
-        }
-        button {
-            padding: 15px 30px; border: none; border-radius: 12px; font-size: 16px; font-weight: bold;
-            background: linear-gradient(45deg, #00ffcc, #0066ff); color: #000; cursor: pointer;
-            box-shadow: 0 0 15px rgba(0, 255, 204, 0.4); transition: 0.2s;
-        }
-        button:active { transform: scale(0.95); }
+        /* تصميم لوحة المطور المخفية */
+        #admin-panel { display: none; margin-top: 30px; width: 100%; max-width: 400px; background: #330000; padding: 15px; border-radius: 15px; border: 2px solid #ff3333; box-sizing: border-box; }
+        .admin-title { color: #ff3333; font-weight: bold; text-align: center; margin-bottom: 10px; }
     </style>
 </head>
 <body>
 
     <div class="title">🏆 Jackpot Arena</div>
-    <div class="pool-amount" id="total-pool">0.00 TON</div>
+    <div class="balance-box" id="my-balance">جاري جلب الرصيد...</div>
+    <div style="font-size: 24px; color: #ffcc00; font-weight: bold; margin-bottom: 10px;" id="total-pool">0.00 TON</div>
 
-    <div class="arena" id="arena">
-        </div>
+    <div class="arena" id="arena"></div>
 
     <div class="controls">
-        <input type="number" id="bet-amount" placeholder="كمية الـ TON..." step="0.1">
+        <input type="number" id="bet-amount" placeholder="الكمية..." step="0.1">
         <button onclick="placeBet()">مزايدة 🔥</button>
+    </div>
+
+    <div id="admin-panel">
+        <div class="admin-title">🛠️ لوحة تحكم المطور</div>
+        <div style="display: flex; gap: 5px; margin-bottom: 10px;">
+            <input type="number" id="target-id" placeholder="آيدي اللاعب">
+            <input type="number" id="admin-amount" placeholder="كمية التون">
+        </div>
+        <button style="width: 100%; background: #ff3333; color: white;" onclick="addTon()">إضافة رصيد للاعب ➕</button>
     </div>
 
     <script>
         const tg = window.Telegram.WebApp;
         tg.expand(); 
-        
-        // جلب معلومات اللاعب من تليجرام
-        const user = tg.initDataUnsafe?.user || { id: 1, first_name: "ضيف", photo_url: "https://via.placeholder.com/60" };
+        const user = tg.initDataUnsafe?.user || { id: 7126816492, first_name: "مطور", photo_url: "" }; // للتيست
 
-        // ⚠️ ملاحظة: حط رابط السيرفر مالتك هنا (اذا تستخدم ngrok أو استضافة)
-        // إذا تشغل السيرفر والواجهة نفس التلفون محلياً، بقيها فارغة ' '
+        // هنا ماكو داعي للرابط! راح يتصل تلقائياً بنفس المكان اللي مشتغل بي
         const socket = io(); 
+
+        // إظهار لوحة المطور إذا كان هذا الآيدي مالتك
+        if (user.id === 7126816492) {
+            document.getElementById('admin-panel').style.display = 'block';
+        }
+
+        socket.emit('request_balance', { id: user.id });
+
+        socket.on('update_balance', function(data) {
+            document.getElementById('my-balance').innerText = "رصيدك: " + data.balance.toFixed(2) + " TON 💎";
+        });
 
         function placeBet() {
             const amount = parseFloat(document.getElementById('bet-amount').value);
-            if(isNaN(amount) || amount <= 0) {
-                tg.showAlert("❌ أدخل كمية صحيحة للمزايدة!");
-                return;
+            if(amount > 0) {
+                socket.emit('place_bet', { id: user.id, name: user.first_name, photo: user.photo_url || "", bet: amount });
             }
-            
-            socket.emit('place_bet', {
-                id: user.id,
-                name: user.first_name,
-                photo: user.photo_url || "https://via.placeholder.com/60",
-                bet: amount
-            });
-            document.getElementById('bet-amount').value = '';
+        }
+
+        // دالة المطور لإضافة الرصيد من داخل اللعبة
+        function addTon() {
+            const target = parseInt(document.getElementById('target-id').value);
+            const amt = parseFloat(document.getElementById('admin-amount').value);
+            if(target && amt > 0) {
+                socket.emit('admin_add_ton', { admin_id: user.id, target_id: target, amount: amt });
+                tg.showAlert(`تم إرسال طلب إضافة ${amt} TON للاعب ${target}`);
+            }
         }
 
         socket.on('update_pool', function(data) {
             document.getElementById('total-pool').innerText = data.total_ton.toFixed(2) + " TON";
             const arena = document.getElementById('arena');
             arena.innerHTML = ''; 
-
-            const colors = ['rgba(0, 255, 204, 0.6)', 'rgba(255, 51, 102, 0.6)', 'rgba(153, 51, 255, 0.6)', 'rgba(255, 204, 0, 0.6)'];
+            const colors = ['#00ffcc', '#ff3366', '#9933ff', '#ffcc00'];
 
             data.players.forEach((player, index) => {
                 const zone = document.createElement('div');
                 zone.className = 'player-zone';
                 zone.style.width = player.percentage + '%';
-                zone.style.backgroundColor = colors[index % colors.length];
-                
-                zone.innerHTML = `
-                    <img src="${player.photo}" class="player-photo">
-                    <div class="player-name">${player.name}</div>
-                    <div class="player-percent">${player.percentage.toFixed(1)}%</div>
-                `;
+                zone.style.backgroundColor = colors[index % colors.length] + '80'; // لون شفاف
+                zone.innerHTML = `<img src="${player.photo}" class="player-photo"><div class="player-percent">${player.percentage.toFixed(1)}%</div>`;
                 arena.appendChild(zone);
             });
+            socket.emit('request_balance', { id: user.id });
         });
 
-        socket.on('error_msg', function(msg) {
-            tg.showAlert(msg);
-        });
+        socket.on('system_msg', function(msg) { tg.showAlert(msg); });
     </script>
 </body>
 </html>
-
